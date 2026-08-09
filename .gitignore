@@ -9,10 +9,9 @@ node_modules/
 dist/
 build/
 
-# Local config
-.claude/
-CLAUDE.md
+# Editor
 .vscode/
+.idea/
 
 # OS
 .DS_Store
