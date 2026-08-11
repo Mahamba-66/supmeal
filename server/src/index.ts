@@ -3,6 +3,7 @@ import cors from "cors";
 import { prisma } from "./db.js";
 import authRoutes from "./routes/auth.routes.js";
 import cookbookRoutes from "./routes/cookbook.routes.js";
+import recipeRoutes from "./routes/recipe.routes.js";
 
 const app = express();
 app.use(cors());
@@ -10,6 +11,7 @@ app.use(express.json());
 
 app.use("/auth", authRoutes);
 app.use("/cookbooks", cookbookRoutes);
+app.use("/recipes", recipeRoutes);
 
 app.get("/health", async (req, res) => {
   try {
