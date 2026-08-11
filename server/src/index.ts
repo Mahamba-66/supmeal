@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
+import { createServer } from "node:http";
 import { prisma } from "./db.js";
+import { initSocket } from "./socket.js";
 import authRoutes from "./routes/auth.routes.js";
 import cookbookRoutes from "./routes/cookbook.routes.js";
 import recipeRoutes from "./routes/recipe.routes.js";
@@ -24,7 +26,10 @@ app.get("/health", async (req, res) => {
   }
 });
 
+const httpServer = createServer(app);
+initSocket(httpServer);
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
