@@ -2,12 +2,14 @@ import express from "express";
 import cors from "cors";
 import { prisma } from "./db.js";
 import authRoutes from "./routes/auth.routes.js";
+import cookbookRoutes from "./routes/cookbook.routes.js";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 app.use("/auth", authRoutes);
+app.use("/cookbooks", cookbookRoutes);
 
 app.get("/health", async (req, res) => {
   try {
