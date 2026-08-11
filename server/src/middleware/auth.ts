@@ -14,6 +14,10 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
 
   const token = authHeader.split(" ")[1];
 
+  if (!token) {
+    return res.status(401).json({ error: "No token provided" });
+  }
+
   try {
     const payload = verifyToken(token);
     req.userId = payload.userId;
