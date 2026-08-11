@@ -7,6 +7,7 @@ import {
   getCookbook,
   inviteMember,
 } from "../controllers/cookbook.controller.js";
+import { listMessages } from "../controllers/message.controller.js";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.post("/", createCookbook);
 router.get("/", listMyCookbooks);
 router.get("/:cookbookId", getCookbook);
 router.post("/:cookbookId/invite", requireCookbookRole("OWNER"), inviteMember);
+router.get("/:cookbookId/messages", listMessages);
 
 export default router;
