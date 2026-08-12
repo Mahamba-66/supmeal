@@ -32,7 +32,7 @@ export async function addComment(req: AuthRequest, res: Response) {
 
   const comment = await prisma.comment.create({
     data: { content: parsed.data.content, userId: req.userId, recipeId },
-    include: { user: { select: { id: true, name: true } } },
+    include: { user: { select: { id: true, firstName: true, lastName: true } } },
   });
 
   return res.status(201).json({ comment });
@@ -46,7 +46,7 @@ export async function listComments(req: AuthRequest, res: Response) {
 
   const comments = await prisma.comment.findMany({
     where: { recipeId },
-    include: { user: { select: { id: true, name: true } } },
+    include: { user: { select: { id: true, firstName: true, lastName: true } } },
     orderBy: { createdAt: "asc" },
   });
 

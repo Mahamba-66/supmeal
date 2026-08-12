@@ -55,7 +55,7 @@ export function initSocket(httpServer: HttpServer) {
 
       const message = await prisma.message.create({
         data: { content, userId, cookbookId },
-        include: { user: { select: { id: true, name: true } } },
+        include: { user: { select: { id: true, firstName: true, lastName: true } } },
       });
 
       io.to(`cookbook:${cookbookId}`).emit("new-message", message);

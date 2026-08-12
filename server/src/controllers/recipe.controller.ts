@@ -126,7 +126,12 @@ export async function getRecipe(req: AuthRequest, res: Response) {
 
   const recipe = await prisma.recipe.findUnique({
     where: { id: recipeId },
-    include: { ingredients: true, tags: true, comments: true, author: { select: { id: true, name: true } } },
+    include: {
+      ingredients: true,
+      tags: true,
+      comments: true,
+      author: { select: { id: true, firstName: true, lastName: true } },
+    },
   });
 
   if (!recipe) return res.status(404).json({ error: "Recipe not found" });

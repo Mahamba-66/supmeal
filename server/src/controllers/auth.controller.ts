@@ -7,7 +7,9 @@ import { signToken } from "../utils/jwt.js";
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
-  name: z.string().min(1),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  dateOfBirth: z.string().datetime().or(z.string().regex(/\d{4}-\d{2}-\d{2}$/)),
 });
 
 const loginSchema = z.object({
@@ -16,7 +18,8 @@ const loginSchema = z.object({
 });
 
 const updateMeSchema = z.object({
-  name: z.string().min(1).optional(),
+  firstName: z.string().min(1).optional(),
+  lastName: z.string().min(1).optional(),
   diet: z.string().nullable().optional(),
   allergies: z.array(z.string()).optional(),
   defaultServings: z.number().int().positive().optional(),
@@ -30,7 +33,12 @@ export async function register(req: Request, res: Response) {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
 
-  const { email, password, name } = parsed.data;
+  const { email, password, firstName, lastName, dateOfBirth } = parsed.data;
+
+  const birthDate = new Date(dateOfBirth);
+  if (birthDate > new Date()) {
+    return res.status(400).json({ error: "Date of birth cannot be in the future" });
+  }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -40,14 +48,14 @@ export async function register(req: Request, res: Response) {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const user = await prisma.user.create({
-    data: { email, password: hashedPassword, name },
+    data: { email, password: hashedPassword, firstName, lastName, dateOfBirth: birthDate },
   });
 
   const token = signToken({ userId: user.id });
 
   return res.status(201).json({
     token,
-    user: { id: user.id, email: user.email, name: user.name },
+    user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName },
   });
 }
 
@@ -73,7 +81,7 @@ export async function login(req: Request, res: Response) {
 
   return res.json({
     token,
-    user: { id: user.id, email: user.email, name: user.name },
+    user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName },
   });
 }
 
@@ -84,7 +92,10 @@ export async function me(req: Request & { userId?: string }, res: Response) {
 
   const user = await prisma.user.findUnique({
     where: { id: req.userId },
-    select: { id: true, email: true, name: true, diet: true, allergies: true, defaultServings: true },
+    select: {
+      id: true, email: true, firstName: true, lastName: true, dateOfBirth: true,
+      diet: true, allergies: true, defaultServings: true,
+    },
   });
 
   if (!user) {
@@ -104,10 +115,11 @@ export async function updateMe(req: Request & { userId?: string }, res: Response
     return res.status(400).json({ error: parsed.error.flatten() });
   }
 
-  const { name, diet, allergies, defaultServings, currentPassword, newPassword } = parsed.data;
+  const { firstName, lastName, diet, allergies, defaultServings, currentPassword, newPassword } = parsed.data;
 
   const updateData: Record<string, unknown> = {};
-  if (name !== undefined) updateData.name = name;
+  if (firstName !== undefined) updateData.firstName = firstName;
+  if (lastName !== undefined) updateData.lastName = lastName;
   if (diet !== undefined) updateData.diet = diet;
   if (allergies !== undefined) updateData.allergies = allergies;
   if (defaultServings !== undefined) updateData.defaultServings = defaultServings;
@@ -133,7 +145,10 @@ export async function updateMe(req: Request & { userId?: string }, res: Response
   const updated = await prisma.user.update({
     where: { id: req.userId },
     data: updateData,
-    select: { id: true, email: true, name: true, diet: true, allergies: true, defaultServings: true },
+    select: {
+      id: true, email: true, firstName: true, lastName: true, dateOfBirth: true,
+      diet: true, allergies: true, defaultServings: true,
+    },
   });
 
   return res.json({ user: updated });

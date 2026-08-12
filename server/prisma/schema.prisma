@@ -7,8 +7,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  
 }
+
 enum Role {
   OWNER
   EDITOR
@@ -27,7 +27,9 @@ model User {
   id              String          @id @default(uuid())
   email           String          @unique
   password        String?
-  name            String
+  firstName       String
+  lastName        String
+  dateOfBirth     DateTime
   avatarUrl       String?
   diet            String?
   allergies       String[]
@@ -148,11 +150,9 @@ model MealPlan {
   name       String
   createdAt  DateTime  @default(now())
 
-  // Planning personnel
   user       User?     @relation(fields: [userId], references: [id])
   userId     String?
 
-  // Planning partagé dans un cookbook
   cookbook   Cookbook? @relation(fields: [cookbookId], references: [id])
   cookbookId String?
 

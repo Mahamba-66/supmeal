@@ -63,7 +63,7 @@ export async function getCookbook(req: AuthRequest, res: Response) {
   const cookbook = await prisma.cookbook.findUnique({
     where: { id: cookbookId },
     include: {
-      members: { include: { user: { select: { id: true, name: true, email: true } } } },
+      members: { include: { user: { select: { id: true, firstName: true, lastName: true, email: true } } } },
       recipes: true,
     },
   });

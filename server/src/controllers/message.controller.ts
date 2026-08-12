@@ -17,7 +17,7 @@ export async function listMessages(req: AuthRequest, res: Response) {
 
   const messages = await prisma.message.findMany({
     where: { cookbookId },
-    include: { user: { select: { id: true, name: true } } },
+    include: { user: { select: { id: true, firstName: true, lastName: true } } },
     orderBy: { createdAt: "asc" },
   });
 
