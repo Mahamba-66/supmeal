@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.routes.js";
 import cookbookRoutes from "./routes/cookbook.routes.js";
 import recipeRoutes from "./routes/recipe.routes.js";
 import mealPlanRoutes from "./routes/mealplan.routes.js";
+import dataRoutes from "./routes/data.routes.js";
 
 const app = express();
 app.use(cors());
@@ -16,6 +17,7 @@ app.use("/auth", authRoutes);
 app.use("/cookbooks", cookbookRoutes);
 app.use("/recipes", recipeRoutes);
 app.use("/mealplans", mealPlanRoutes);
+app.use("/data", dataRoutes);
 
 app.get("/health", async (req, res) => {
   try {
