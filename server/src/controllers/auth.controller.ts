@@ -15,6 +15,15 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+const updateMeSchema = z.object({
+  name: z.string().min(1).optional(),
+  diet: z.string().nullable().optional(),
+  allergies: z.array(z.string()).optional(),
+  defaultServings: z.number().int().positive().optional(),
+  currentPassword: z.string().optional(),
+  newPassword: z.string().min(8).optional(),
+});
+
 export async function register(req: Request, res: Response) {
   const parsed = registerSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -83,4 +92,49 @@ export async function me(req: Request & { userId?: string }, res: Response) {
   }
 
   return res.json({ user });
+}
+
+export async function updateMe(req: Request & { userId?: string }, res: Response) {
+  if (!req.userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const parsed = updateMeSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
+
+  const { name, diet, allergies, defaultServings, currentPassword, newPassword } = parsed.data;
+
+  const updateData: Record<string, unknown> = {};
+  if (name !== undefined) updateData.name = name;
+  if (diet !== undefined) updateData.diet = diet;
+  if (allergies !== undefined) updateData.allergies = allergies;
+  if (defaultServings !== undefined) updateData.defaultServings = defaultServings;
+
+  if (newPassword) {
+    if (!currentPassword) {
+      return res.status(400).json({ error: "currentPassword is required to set a new password" });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    if (!user || !user.password) {
+      return res.status(400).json({ error: "This account has no password set" });
+    }
+
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) {
+      return res.status(401).json({ error: "Current password is incorrect" });
+    }
+
+    updateData.password = await bcrypt.hash(newPassword, 10);
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: req.userId },
+    data: updateData,
+    select: { id: true, email: true, name: true, diet: true, allergies: true, defaultServings: true },
+  });
+
+  return res.json({ user: updated });
 }
