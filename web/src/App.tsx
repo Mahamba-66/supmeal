@@ -1,14 +1,23 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
-function Home() {
-  return <div className="p-8"><h1 className="text-2xl font-bold">SUPMEAL</h1></div>;
-}
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Home from "./pages/Home";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
