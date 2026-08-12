@@ -4,18 +4,35 @@ import { api } from "../lib/api";
 import { useAuthStore } from "../store/authStore";
 
 export default function Register() {
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const setAuth = useAuthStore((s) => s.setAuth);
   const navigate = useNavigate();
 
+  const passwordsMismatch = confirmPassword.length > 0 && password !== confirmPassword;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (password !== confirmPassword) {
+      setError("Les mots de passe ne correspondent pas");
+      return;
+    }
+
     try {
-      const res = await api.post("/auth/register", { name, email, password });
+      const res = await api.post("/auth/register", {
+        firstName,
+        lastName,
+        email,
+        dateOfBirth,
+        password,
+      });
       setAuth(res.data.token, res.data.user);
       navigate("/");
     } catch (err: any) {
@@ -29,9 +46,17 @@ export default function Register() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input
           type="text"
+          placeholder="Prenom"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          className="border rounded px-3 py-2"
+          required
+        />
+        <input
+          type="text"
           placeholder="Nom"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
           className="border rounded px-3 py-2"
           required
         />
@@ -44,6 +69,14 @@ export default function Register() {
           required
         />
         <input
+          type="date"
+          placeholder="Date de naissance"
+          value={dateOfBirth}
+          onChange={(e) => setDateOfBirth(e.target.value)}
+          className="border rounded px-3 py-2"
+          required
+        />
+        <input
           type="password"
           placeholder="Mot de passe (8 caracteres min)"
           value={password}
@@ -51,8 +84,23 @@ export default function Register() {
           className="border rounded px-3 py-2"
           required
         />
+        <input
+          type="password"
+          placeholder="Confirmer le mot de passe"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          className={`border rounded px-3 py-2 ${passwordsMismatch ? "border-red-500" : ""}`}
+          required
+        />
+        {passwordsMismatch && (
+          <p className="text-red-500 text-sm">Les mots de passe ne correspondent pas</p>
+        )}
         {error && <p className="text-red-500 text-sm">{error}</p>}
-        <button type="submit" className="bg-purple-600 text-white rounded px-3 py-2">
+        <button
+          type="submit"
+          disabled={passwordsMismatch}
+          className="bg-purple-600 text-white rounded px-3 py-2 disabled:opacity-50"
+        >
           S'inscrire
         </button>
       </form>
