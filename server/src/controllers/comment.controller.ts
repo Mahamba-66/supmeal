@@ -58,6 +58,33 @@ export async function listComments(req: AuthRequest, res: Response) {
   return res.json({ comments });
 }
 
+export async function updateComment(req: AuthRequest, res: Response) {
+  if (!req.userId) return res.status(401).json({ error: "Unauthorized" });
+
+  const commentId = req.params.commentId;
+  if (!commentId || typeof commentId !== "string") {
+    return res.status(400).json({ error: "commentId is required" });
+  }
+
+  const comment = await prisma.comment.findUnique({ where: { id: commentId } });
+  if (!comment) return res.status(404).json({ error: "Comment not found" });
+
+  if (comment.userId !== req.userId) {
+    return res.status(403).json({ error: "You cannot edit this comment" });
+  }
+
+  const parsed = createCommentSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+
+  const updated = await prisma.comment.update({
+    where: { id: commentId },
+    data: { content: parsed.data.content },
+    include: { user: { select: { id: true, firstName: true, lastName: true } } },
+  });
+
+  return res.json({ comment: updated });
+}
+
 export async function deleteComment(req: AuthRequest, res: Response) {
   if (!req.userId) return res.status(401).json({ error: "Unauthorized" });
 

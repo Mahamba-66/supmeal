@@ -18,7 +18,9 @@ export default function Login() {
       setAuth(res.data.token, res.data.user);
       navigate("/");
     } catch (err: any) {
-      setError(err.response?.data?.error ?? "Erreur de connexion");
+      const errData = err.response?.data?.error;
+const message = typeof errData === "string" ? errData : "Email ou mot de passe incorrect";
+setError(message);
     }
   }
 

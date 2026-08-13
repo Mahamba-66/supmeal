@@ -41,7 +41,8 @@ export default function CookbookDetailPage() {
       setInviteEmail("");
       loadCookbook();
     } catch (err: any) {
-      setError(err.response?.data?.error ?? "Erreur lors de l'invitation");
+      const errData44 = err.response?.data?.error;
+setError(typeof errData44 === "string" ? errData44 : "Erreur lors de l'invitation");
     }
   }
 
@@ -52,7 +53,8 @@ export default function CookbookDetailPage() {
       setIsEditing(false);
       loadCookbook();
     } catch (err: any) {
-      setError(err.response?.data?.error ?? "Erreur lors de la modification");
+      const errData55 = err.response?.data?.error;
+setError(typeof errData55 === "string" ? errData55 : "Erreur lors de la modification");
     }
   }
 
@@ -73,7 +75,8 @@ export default function CookbookDetailPage() {
       loadCookbook();
       loadPersonalRecipes();
     } catch (err: any) {
-      setError(err.response?.data?.error ?? "Erreur lors de l'ajout");
+     const errData76 = err.response?.data?.error;
+setError(typeof errData76 === "string" ? errData76 : "Erreur lors de l'ajout");
     }
   }
 

@@ -25,7 +25,8 @@ export default function Cookbooks() {
       setName("");
       loadCookbooks();
     } catch (err: any) {
-      setError(err.response?.data?.error ?? "Erreur lors de la creation");
+      const errData = err.response?.data?.error;
+setError(typeof errData === "string" ? errData : "Erreur lors de la creation");
     }
   }
 

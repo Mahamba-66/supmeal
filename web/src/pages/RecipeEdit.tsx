@@ -67,7 +67,8 @@ export default function RecipeEdit() {
       });
       navigate(`/recipes/${recipeId}`);
     } catch (err: any) {
-      setError(err.response?.data?.error ?? "Erreur lors de la modification");
+      const errData = err.response?.data?.error;
+setError(typeof errData === "string" ? errData : "Erreur lors de la creation");
     }
   }
 

@@ -8,6 +8,7 @@ interface Comment {
   id: string;
   content: string;
   createdAt: string;
+  userId?: string;
   user: { firstName: string; lastName: string };
 }
 
@@ -18,6 +19,8 @@ export default function RecipeDetail() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isFavorited, setIsFavorited] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState("");
   const currentUser = useAuthStore((s) => s.user);
 
   async function loadRecipe() {
@@ -41,6 +44,29 @@ export default function RecipeDetail() {
     const res = await api.post(`/recipes/${recipeId}/comments`, { content: newComment });
     setComments([...comments, res.data.comment]);
     setNewComment("");
+  }
+
+  function startEditComment(comment: Comment) {
+    setEditingCommentId(comment.id);
+    setEditingContent(comment.content);
+  }
+
+  function cancelEditComment() {
+    setEditingCommentId(null);
+    setEditingContent("");
+  }
+
+  async function handleUpdateComment(commentId: string) {
+    if (!editingContent.trim()) return;
+    const res = await api.put(`/recipes/${recipeId}/comments/${commentId}`, { content: editingContent });
+    setComments(comments.map((c) => (c.id === commentId ? res.data.comment : c)));
+    cancelEditComment();
+  }
+
+  async function handleDeleteComment(commentId: string) {
+    if (!confirm("Voulez-vous supprimer ce commentaire ?")) return;
+    await api.delete(`/recipes/${recipeId}/comments/${commentId}`);
+    setComments(comments.filter((c) => c.id !== commentId));
   }
 
   async function handleDelete() {
@@ -115,11 +141,47 @@ export default function RecipeDetail() {
 
       <h2 className="font-semibold mb-2">Commentaires</h2>
       <ul className="flex flex-col gap-2 mb-4">
-        {comments.map((c) => (
-          <li key={c.id} className="text-sm border-b pb-2">
-            <span className="font-semibold">{c.user.firstName} {c.user.lastName}</span>: {c.content}
-          </li>
-        ))}
+        {comments.map((c) => {
+          const isCommentAuthor = c.userId === currentUser?.id;
+          const isEditingThis = editingCommentId === c.id;
+
+          return (
+            <li key={c.id} className="text-sm border-b pb-2">
+              {isEditingThis ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={editingContent}
+                    onChange={(e) => setEditingContent(e.target.value)}
+                    className="border rounded px-2 py-1 flex-1"
+                  />
+                  <button onClick={() => handleUpdateComment(c.id)} className="text-purple-600">
+                    Enregistrer
+                  </button>
+                  <button onClick={cancelEditComment} className="text-gray-500">
+                    Annuler
+                  </button>
+                </div>
+              ) : (
+                <div className="flex justify-between items-center">
+                  <span>
+                    <span className="font-semibold">{c.user.firstName} {c.user.lastName}</span>: {c.content}
+                  </span>
+                  {isCommentAuthor && (
+                    <span className="flex gap-2 text-xs">
+                      <button onClick={() => startEditComment(c)} className="text-purple-600">
+                        Modifier
+                      </button>
+                      <button onClick={() => handleDeleteComment(c.id)} className="text-red-600">
+                        Supprimer
+                      </button>
+                    </span>
+                  )}
+                </div>
+              )}
+            </li>
+          );
+        })}
         {comments.length === 0 && <p className="text-gray-500 text-sm">Aucun commentaire.</p>}
       </ul>
 
