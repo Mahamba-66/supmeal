@@ -12,6 +12,12 @@ export default function Home() {
         <Link to="/cookbooks" className="bg-purple-600 text-white rounded px-4 py-2">
           Mes Cookbooks
         </Link>
+        <Link to="/recipes" className="bg-purple-600 text-white rounded px-4 py-2">
+          Mes Recettes
+        </Link>
+        <Link to="/invites" className="border rounded px-4 py-2">
+          Invitations
+        </Link>
       </div>
       <button onClick={logout} className="mt-6 bg-gray-200 rounded px-3 py-2">
         Se deconnecter

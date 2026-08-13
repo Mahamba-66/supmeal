@@ -4,6 +4,11 @@ import Register from "./pages/Register";
 import Home from "./pages/Home";
 import Cookbooks from "./pages/Cookbooks";
 import CookbookDetailPage from "./pages/CookbookDetail";
+import Recipes from "./pages/Recipes";
+import RecipeCreate from "./pages/RecipeCreate";
+import RecipeDetail from "./pages/RecipeDetail";
+import RecipeEdit from "./pages/RecipeEdit";
+import Invites from "./pages/Invites";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -15,6 +20,11 @@ function App() {
         <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/cookbooks" element={<ProtectedRoute><Cookbooks /></ProtectedRoute>} />
         <Route path="/cookbooks/:cookbookId" element={<ProtectedRoute><CookbookDetailPage /></ProtectedRoute>} />
+        <Route path="/recipes" element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
+        <Route path="/recipes/new" element={<ProtectedRoute><RecipeCreate /></ProtectedRoute>} />
+        <Route path="/recipes/:recipeId" element={<ProtectedRoute><RecipeDetail /></ProtectedRoute>} />
+        <Route path="/recipes/:recipeId/edit" element={<ProtectedRoute><RecipeEdit /></ProtectedRoute>} />
+        <Route path="/invites" element={<ProtectedRoute><Invites /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );

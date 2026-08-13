@@ -36,7 +36,11 @@ export default function Register() {
       setAuth(res.data.token, res.data.user);
       navigate("/");
     } catch (err: any) {
-      setError(err.response?.data?.error ?? "Erreur d'inscription");
+     const errData = err.response?.data?.error;
+const message = typeof errData === "string"
+  ? errData
+  : "Verifiez les informations saisies (mot de passe 8 caracteres min, date valide)";
+setError(message);
     }
   }
 

@@ -8,12 +8,13 @@ export interface Cookbook {
 export interface CookbookMember {
   id: string;
   role: string;
+  status: string;
   joinedAt: string;
   user: { id: string; firstName: string; lastName: string; email: string };
 }
 
 export interface CookbookDetail extends Cookbook {
-  members: CookbookMember[];
+  members?: CookbookMember[];
   recipes: Recipe[];
 }
 
@@ -26,6 +27,11 @@ export interface Ingredient {
 export interface Tag {
   id: string;
   name: string;
+}
+
+export interface Favorite {
+  id: string;
+  userId: string;
 }
 
 export interface Recipe {
@@ -41,4 +47,12 @@ export interface Recipe {
   cookbookId: string | null;
   ingredients: Ingredient[];
   tags: Tag[];
+  favorites?: Favorite[];
+  myCookbookRole?: string | null;
+}
+
+export interface PendingInvite {
+  id: string;
+  role: string;
+  cookbook: { id: string; name: string };
 }
