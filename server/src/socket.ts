@@ -29,7 +29,7 @@ export function initSocket(httpServer: HttpServer) {
         where: { userId_cookbookId: { userId, cookbookId } },
       });
 
-      if (!membership) {
+      if (!membership || membership.status !== "ACCEPTED") {
         socket.emit("error", { message: "You are not a member of this cookbook" });
         return;
       }
@@ -48,7 +48,7 @@ export function initSocket(httpServer: HttpServer) {
         where: { userId_cookbookId: { userId, cookbookId } },
       });
 
-      if (!membership) {
+      if (!membership || membership.status !== "ACCEPTED") {
         socket.emit("error", { message: "You are not a member of this cookbook" });
         return;
       }

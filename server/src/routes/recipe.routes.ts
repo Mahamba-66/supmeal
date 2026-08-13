@@ -7,6 +7,7 @@ import {
   updateRecipe,
   deleteRecipe,
   toggleFavorite,
+  addToCookbook,
 } from "../controllers/recipe.controller.js";
 import commentRoutes from "./comment.routes.js";
 
@@ -20,6 +21,7 @@ router.get("/:recipeId", getRecipe);
 router.put("/:recipeId", updateRecipe);
 router.delete("/:recipeId", deleteRecipe);
 router.post("/:recipeId/favorite", toggleFavorite);
+router.post("/:recipeId/add-to-cookbook", addToCookbook);
 router.use("/:recipeId/comments", commentRoutes);
 
 export default router;

@@ -16,6 +16,11 @@ enum Role {
   COMMENTER
 }
 
+enum MemberStatus {
+  PENDING
+  ACCEPTED
+}
+
 enum MealType {
   BREAKFAST
   LUNCH
@@ -50,7 +55,7 @@ model OAuthAccount {
   provider   String
   providerId String
 
-  user       User   @relation(fields: [userId], references: [id])
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     String
 
   @@unique([provider, providerId])
@@ -68,14 +73,15 @@ model Cookbook {
 }
 
 model CookbookMember {
-  id         String   @id @default(uuid())
-  role       Role     @default(READER)
-  joinedAt   DateTime @default(now())
+  id         String       @id @default(uuid())
+  role       Role         @default(READER)
+  status     MemberStatus @default(ACCEPTED)
+  joinedAt   DateTime     @default(now())
 
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     String
 
-  cookbook   Cookbook @relation(fields: [cookbookId], references: [id])
+  cookbook   Cookbook @relation(fields: [cookbookId], references: [id], onDelete: Cascade)
   cookbookId String
 
   @@unique([userId, cookbookId])
@@ -92,10 +98,10 @@ model Recipe {
   source     String?
   createdAt  DateTime @default(now())
 
-  author     User     @relation(fields: [authorId], references: [id])
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId   String
 
-  cookbook   Cookbook? @relation(fields: [cookbookId], references: [id])
+  cookbook   Cookbook? @relation(fields: [cookbookId], references: [id], onDelete: Cascade)
   cookbookId String?
 
   ingredients Ingredient[]
@@ -110,7 +116,7 @@ model Ingredient {
   name     String
   quantity String
 
-  recipe   Recipe @relation(fields: [recipeId], references: [id])
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   recipeId String
 }
 
@@ -126,10 +132,10 @@ model Comment {
   content   String
   createdAt DateTime @default(now())
 
-  user      User   @relation(fields: [userId], references: [id])
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
 
-  recipe    Recipe @relation(fields: [recipeId], references: [id])
+  recipe    Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   recipeId  String
 }
 
@@ -138,10 +144,10 @@ model Message {
   content    String
   createdAt  DateTime @default(now())
 
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     String
 
-  cookbook   Cookbook @relation(fields: [cookbookId], references: [id])
+  cookbook   Cookbook @relation(fields: [cookbookId], references: [id], onDelete: Cascade)
   cookbookId String
 }
 
@@ -150,10 +156,10 @@ model MealPlan {
   name       String
   createdAt  DateTime  @default(now())
 
-  user       User?     @relation(fields: [userId], references: [id])
+  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     String?
 
-  cookbook   Cookbook? @relation(fields: [cookbookId], references: [id])
+  cookbook   Cookbook? @relation(fields: [cookbookId], references: [id], onDelete: Cascade)
   cookbookId String?
 
   recipes    MealPlanRecipe[]
@@ -165,10 +171,10 @@ model MealPlanRecipe {
   mealType   MealType?
   servings   Int?
 
-  mealPlan   MealPlan @relation(fields: [mealPlanId], references: [id])
+  mealPlan   MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
   mealPlanId String
 
-  recipe     Recipe   @relation(fields: [recipeId], references: [id])
+  recipe     Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   recipeId   String
 
   @@unique([mealPlanId, recipeId, date])
@@ -178,10 +184,10 @@ model Favorite {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
 
-  recipe    Recipe   @relation(fields: [recipeId], references: [id])
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   recipeId  String
 
   @@unique([userId, recipeId])

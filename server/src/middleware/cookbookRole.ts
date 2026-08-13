@@ -20,7 +20,7 @@ export function requireCookbookRole(minRole: string) {
       where: { userId_cookbookId: { userId: req.userId, cookbookId } },
     });
 
-    if (!membership) {
+    if (!membership || membership.status !== "ACCEPTED") {
       return res.status(403).json({ error: "You are not a member of this cookbook" });
     }
 

@@ -27,7 +27,7 @@ async function assertCanEditCookbook(userId: string, cookbookId: string) {
   const membership = await prisma.cookbookMember.findUnique({
     where: { userId_cookbookId: { userId, cookbookId } },
   });
-  if (!membership) return "You are not a member of this cookbook";
+  if (!membership || membership.status !== "ACCEPTED") return "You are not a member of this cookbook";
   if (membership.role !== "OWNER" && membership.role !== "EDITOR") {
     return "Requires at least EDITOR role";
   }
@@ -79,29 +79,35 @@ export async function listRecipes(req: AuthRequest, res: Response) {
   });
   const myCookbookIds = memberships.map((m) => m.cookbookId);
 
-  const where: Record<string, unknown> = {
-    OR: [
-      { authorId: req.userId, cookbookId: null },
-      { cookbookId: { in: myCookbookIds } },
-    ],
-  };
+  const accessFilter: Record<string, unknown> =
+    typeof cookbookId === "string"
+      ? { cookbookId }
+      : {
+          OR: [
+            { authorId: req.userId, cookbookId: null },
+            { cookbookId: { in: myCookbookIds } },
+          ],
+        };
 
-  if (typeof cookbookId === "string") {
-    where.cookbookId = cookbookId;
-    delete where.OR;
-  }
+  const extraFilters: Record<string, unknown>[] = [];
 
   if (typeof tag === "string") {
-    where.tags = { some: { name: tag } };
+    extraFilters.push({ tags: { some: { name: tag } } });
   }
 
   if (typeof q === "string" && q.length > 0) {
-    where.OR = [
-      { title: { contains: q, mode: "insensitive" } },
-      { steps: { contains: q, mode: "insensitive" } },
-      { ingredients: { some: { name: { contains: q, mode: "insensitive" } } } },
-    ];
+    extraFilters.push({
+      OR: [
+        { title: { contains: q, mode: "insensitive" } },
+        { steps: { contains: q, mode: "insensitive" } },
+        { ingredients: { some: { name: { contains: q, mode: "insensitive" } } } },
+      ],
+    });
   }
+
+  const where = extraFilters.length > 0
+    ? { AND: [accessFilter, ...extraFilters] }
+    : accessFilter;
 
   let recipes = await prisma.recipe.findMany({
     where,
@@ -129,14 +135,22 @@ export async function getRecipe(req: AuthRequest, res: Response) {
     include: {
       ingredients: true,
       tags: true,
-      comments: true,
+      comments: { include: { user: { select: { id: true, firstName: true, lastName: true } } } },
       author: { select: { id: true, firstName: true, lastName: true } },
     },
   });
 
   if (!recipe) return res.status(404).json({ error: "Recipe not found" });
 
-  return res.json({ recipe });
+  let myCookbookRole: string | null = null;
+  if (recipe.cookbookId && req.userId) {
+    const membership = await prisma.cookbookMember.findUnique({
+      where: { userId_cookbookId: { userId: req.userId, cookbookId: recipe.cookbookId } },
+    });
+    myCookbookRole = membership?.role ?? null;
+  }
+
+  return res.json({ recipe: { ...recipe, myCookbookRole } });
 }
 
 export async function updateRecipe(req: AuthRequest, res: Response) {
@@ -151,11 +165,7 @@ export async function updateRecipe(req: AuthRequest, res: Response) {
   if (!existing) return res.status(404).json({ error: "Recipe not found" });
 
   if (existing.authorId !== req.userId) {
-    if (!existing.cookbookId) {
-      return res.status(403).json({ error: "You cannot edit this recipe" });
-    }
-    const err = await assertCanEditCookbook(req.userId, existing.cookbookId);
-    if (err) return res.status(403).json({ error: err });
+    return res.status(403).json({ error: "Only the author can edit this recipe" });
   }
 
   const parsed = updateRecipeSchema.safeParse(req.body);
@@ -203,12 +213,8 @@ export async function deleteRecipe(req: AuthRequest, res: Response) {
   const existing = await prisma.recipe.findUnique({ where: { id: recipeId } });
   if (!existing) return res.status(404).json({ error: "Recipe not found" });
 
-  if (existing.authorId !== req.userId) {
-    if (!existing.cookbookId) {
-      return res.status(403).json({ error: "You cannot delete this recipe" });
-    }
-    const err = await assertCanEditCookbook(req.userId, existing.cookbookId);
-    if (err) return res.status(403).json({ error: err });
+ if (existing.authorId !== req.userId) {
+    return res.status(403).json({ error: "Only the author can delete this recipe" });
   }
 
   await prisma.recipe.delete({ where: { id: recipeId } });
@@ -235,3 +241,35 @@ export async function toggleFavorite(req: AuthRequest, res: Response) {
   await prisma.favorite.create({ data: { userId: req.userId, recipeId } });
   return res.json({ favorited: true });
 }
+
+export async function addToCookbook(req: AuthRequest, res: Response) {
+  if (!req.userId) return res.status(401).json({ error: "Unauthorized" });
+
+  const recipeId = req.params.recipeId;
+  if (!recipeId || typeof recipeId !== "string") {
+    return res.status(400).json({ error: "recipeId is required" });
+  }
+
+  const parsed = z.object({ cookbookId: z.string().uuid() }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+
+  const { cookbookId } = parsed.data;
+
+  const recipe = await prisma.recipe.findUnique({ where: { id: recipeId } });
+  if (!recipe) return res.status(404).json({ error: "Recipe not found" });
+
+  if (recipe.authorId !== req.userId) {
+    return res.status(403).json({ error: "Only the author can add this recipe to a cookbook" });
+  }
+
+  const err = await assertCanEditCookbook(req.userId, cookbookId);
+  if (err) return res.status(403).json({ error: err });
+
+  const updated = await prisma.recipe.update({
+    where: { id: recipeId },
+    data: { cookbookId },
+  });
+
+  return res.json({ recipe: updated });
+}
+

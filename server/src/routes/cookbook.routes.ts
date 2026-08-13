@@ -6,6 +6,11 @@ import {
   listMyCookbooks,
   getCookbook,
   inviteMember,
+  updateCookbook,
+  deleteCookbook,
+  listPendingInvites,
+  acceptInvite,
+  declineInvite,
 } from "../controllers/cookbook.controller.js";
 import { listMessages } from "../controllers/message.controller.js";
 
@@ -15,7 +20,12 @@ router.use(requireAuth);
 
 router.post("/", createCookbook);
 router.get("/", listMyCookbooks);
+router.get("/invites/pending", listPendingInvites);
+router.post("/:cookbookId/accept", acceptInvite);
+router.post("/:cookbookId/decline", declineInvite);
 router.get("/:cookbookId", getCookbook);
+router.put("/:cookbookId", updateCookbook);
+router.delete("/:cookbookId", deleteCookbook);
 router.post("/:cookbookId/invite", requireCookbookRole("OWNER"), inviteMember);
 router.get("/:cookbookId/messages", listMessages);
 

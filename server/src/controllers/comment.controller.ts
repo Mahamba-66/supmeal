@@ -22,7 +22,12 @@ export async function addComment(req: AuthRequest, res: Response) {
     const membership = await prisma.cookbookMember.findUnique({
       where: { userId_cookbookId: { userId: req.userId, cookbookId: recipe.cookbookId } },
     });
-    if (!membership) return res.status(403).json({ error: "You are not a member of this cookbook" });
+    if (!membership || membership.status !== "ACCEPTED") {
+      return res.status(403).json({ error: "You are not a member of this cookbook" });
+    }
+    if (membership.role === "READER") {
+      return res.status(403).json({ error: "Readers cannot comment, only view" });
+    }
   } else if (recipe.authorId !== req.userId) {
     return res.status(403).json({ error: "You cannot comment on this recipe" });
   }
