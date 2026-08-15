@@ -87,7 +87,10 @@ setError(typeof errData76 === "string" ? errData76 : "Erreur lors de l'ajout");
 
   return (
     <div className="max-w-2xl mx-auto mt-10 p-6">
-      <Link to="/cookbooks" className="text-sm text-purple-600">{"<- Retour"}</Link>
+      <div className="flex justify-between items-center">
+  <Link to="/cookbooks" className="text-sm text-purple-600">{"<- Retour"}</Link>
+  <Link to={`/cookbooks/${cookbookId}/chat`} className="text-sm text-purple-600">Discussion {"->"}</Link>
+</div>
 
       <div className="flex justify-between items-center mt-2 mb-6">
         {isEditing ? (

@@ -73,3 +73,12 @@ export interface MealPlan {
   cookbookId: string | null;
   recipes: MealPlanRecipeEntry[];
 }
+
+export interface ChatMessage {
+  id: string;
+  content: string;
+  createdAt: string;
+  userId: string;
+  cookbookId: string;
+  user: { id: string; firstName: string; lastName: string };
+}

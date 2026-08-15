@@ -4,6 +4,7 @@ import Register from "./pages/Register";
 import Home from "./pages/Home";
 import Cookbooks from "./pages/Cookbooks";
 import CookbookDetailPage from "./pages/CookbookDetail";
+import CookbookChat from "./pages/CookbookChat";
 import Recipes from "./pages/Recipes";
 import RecipeCreate from "./pages/RecipeCreate";
 import RecipeDetail from "./pages/RecipeDetail";
@@ -22,6 +23,7 @@ function App() {
         <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/cookbooks" element={<ProtectedRoute><Cookbooks /></ProtectedRoute>} />
         <Route path="/cookbooks/:cookbookId" element={<ProtectedRoute><CookbookDetailPage /></ProtectedRoute>} />
+        <Route path="/cookbooks/:cookbookId/chat" element={<ProtectedRoute><CookbookChat /></ProtectedRoute>} />
         <Route path="/recipes" element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
         <Route path="/recipes/new" element={<ProtectedRoute><RecipeCreate /></ProtectedRoute>} />
         <Route path="/recipes/:recipeId" element={<ProtectedRoute><RecipeDetail /></ProtectedRoute>} />
