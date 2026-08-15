@@ -177,7 +177,7 @@ model MealPlanRecipe {
   recipe     Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   recipeId   String
 
-  @@unique([mealPlanId, recipeId, date])
+ @@unique([mealPlanId, recipeId, date, mealType])
 }
 
 model Favorite {

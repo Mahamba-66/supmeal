@@ -56,3 +56,20 @@ export interface PendingInvite {
   role: string;
   cookbook: { id: string; name: string };
 }
+
+export interface MealPlanRecipeEntry {
+  id: string;
+  date: string;
+  mealType: string | null;
+  servings: number | null;
+  recipe: Recipe;
+}
+
+export interface MealPlan {
+  id: string;
+  name: string;
+  createdAt: string;
+  userId: string | null;
+  cookbookId: string | null;
+  recipes: MealPlanRecipeEntry[];
+}

@@ -9,6 +9,8 @@ import RecipeCreate from "./pages/RecipeCreate";
 import RecipeDetail from "./pages/RecipeDetail";
 import RecipeEdit from "./pages/RecipeEdit";
 import Invites from "./pages/Invites";
+import MealPlans from "./pages/MealPlans";
+import MealPlanDetail from "./pages/MealPlanDetail";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -25,6 +27,8 @@ function App() {
         <Route path="/recipes/:recipeId" element={<ProtectedRoute><RecipeDetail /></ProtectedRoute>} />
         <Route path="/recipes/:recipeId/edit" element={<ProtectedRoute><RecipeEdit /></ProtectedRoute>} />
         <Route path="/invites" element={<ProtectedRoute><Invites /></ProtectedRoute>} />
+        <Route path="/mealplans" element={<ProtectedRoute><MealPlans /></ProtectedRoute>} />
+        <Route path="/mealplans/:mealPlanId" element={<ProtectedRoute><MealPlanDetail /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );

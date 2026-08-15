@@ -15,6 +15,9 @@ export default function Home() {
         <Link to="/recipes" className="bg-purple-600 text-white rounded px-4 py-2">
           Mes Recettes
         </Link>
+        <Link to="/mealplans" className="bg-purple-600 text-white rounded px-4 py-2">
+          Mes Plannings
+        </Link>
         <Link to="/invites" className="border rounded px-4 py-2">
           Invitations
         </Link>
