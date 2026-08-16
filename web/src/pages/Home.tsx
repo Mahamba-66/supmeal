@@ -24,6 +24,9 @@ export default function Home() {
         <Link to="/data" className="border rounded px-4 py-2">
           Import / Export
         </Link>
+        <Link to="/profile" className="border rounded px-4 py-2">
+          Mon profil
+        </Link>
       </div>
       <button onClick={logout} className="mt-6 bg-gray-200 rounded px-3 py-2">
         Se deconnecter

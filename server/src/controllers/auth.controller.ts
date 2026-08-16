@@ -37,12 +37,12 @@ export async function register(req: Request, res: Response) {
 
   const birthDate = new Date(dateOfBirth);
   if (birthDate > new Date()) {
-    return res.status(400).json({ error: "Date of birth cannot be in the future" });
+    return res.status(400).json({ error: "La date de naissance ne peut pas etre dans le futur" });
   }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    return res.status(409).json({ error: "Email already in use" });
+    return res.status(409).json({ error: "Cet email est deja utilise" });
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -69,12 +69,12 @@ export async function login(req: Request, res: Response) {
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !user.password) {
-    return res.status(401).json({ error: "Invalid credentials" });
+    return res.status(401).json({ error: "Email ou mot de passe incorrect" });
   }
 
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) {
-    return res.status(401).json({ error: "Invalid credentials" });
+    return res.status(401).json({ error: "Email ou mot de passe incorrect" });
   }
 
   const token = signToken({ userId: user.id });
@@ -87,7 +87,7 @@ export async function login(req: Request, res: Response) {
 
 export async function me(req: Request & { userId?: string }, res: Response) {
   if (!req.userId) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({ error: "Non autorise" });
   }
 
   const user = await prisma.user.findUnique({
@@ -99,7 +99,7 @@ export async function me(req: Request & { userId?: string }, res: Response) {
   });
 
   if (!user) {
-    return res.status(404).json({ error: "User not found" });
+    return res.status(404).json({ error: "Utilisateur introuvable" });
   }
 
   return res.json({ user });
@@ -107,7 +107,7 @@ export async function me(req: Request & { userId?: string }, res: Response) {
 
 export async function updateMe(req: Request & { userId?: string }, res: Response) {
   if (!req.userId) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({ error: "Non autorise" });
   }
 
   const parsed = updateMeSchema.safeParse(req.body);
@@ -126,17 +126,17 @@ export async function updateMe(req: Request & { userId?: string }, res: Response
 
   if (newPassword) {
     if (!currentPassword) {
-      return res.status(400).json({ error: "currentPassword is required to set a new password" });
+      return res.status(400).json({ error: "Le mot de passe actuel est requis pour en definir un nouveau" });
     }
 
     const user = await prisma.user.findUnique({ where: { id: req.userId } });
     if (!user || !user.password) {
-      return res.status(400).json({ error: "This account has no password set" });
+      return res.status(400).json({ error: "Ce compte n'a pas de mot de passe defini" });
     }
 
     const valid = await bcrypt.compare(currentPassword, user.password);
     if (!valid) {
-      return res.status(401).json({ error: "Current password is incorrect" });
+      return res.status(401).json({ error: "Le mot de passe actuel est incorrect" });
     }
 
     updateData.password = await bcrypt.hash(newPassword, 10);
