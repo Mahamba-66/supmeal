@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
+import { roleLabel } from "../lib/roles";
 import type { PendingInvite } from "../lib/types";
 
 export default function Invites() {
@@ -35,7 +36,7 @@ export default function Invites() {
           <li key={inv.id} className="border rounded px-4 py-3 flex justify-between items-center">
             <span>
               <span className="font-semibold">{inv.cookbook.name}</span>
-              <span className="ml-2 text-sm text-gray-500">(role propose: {inv.role})</span>
+             <span className="ml-2 text-sm text-gray-500">(role propose: {roleLabel(inv.role)})</span>
             </span>
             <div className="flex gap-2">
               <button

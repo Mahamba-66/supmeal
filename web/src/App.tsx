@@ -12,6 +12,7 @@ import RecipeEdit from "./pages/RecipeEdit";
 import Invites from "./pages/Invites";
 import MealPlans from "./pages/MealPlans";
 import MealPlanDetail from "./pages/MealPlanDetail";
+import DataManagement from "./pages/DataManagement";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
         <Route path="/invites" element={<ProtectedRoute><Invites /></ProtectedRoute>} />
         <Route path="/mealplans" element={<ProtectedRoute><MealPlans /></ProtectedRoute>} />
         <Route path="/mealplans/:mealPlanId" element={<ProtectedRoute><MealPlanDetail /></ProtectedRoute>} />
+        <Route path="/data" element={<ProtectedRoute><DataManagement /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );

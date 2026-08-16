@@ -74,7 +74,7 @@ export async function listRecipes(req: AuthRequest, res: Response) {
   const { cookbookId, favorite, tag, q } = req.query;
 
   const memberships = await prisma.cookbookMember.findMany({
-    where: { userId: req.userId },
+    where: { userId: req.userId, status: "ACCEPTED" },
     select: { cookbookId: true },
   });
   const myCookbookIds = memberships.map((m) => m.cookbookId);
@@ -111,7 +111,12 @@ export async function listRecipes(req: AuthRequest, res: Response) {
 
   let recipes = await prisma.recipe.findMany({
     where,
-    include: { ingredients: true, tags: true, favorites: true },
+    include: {
+      ingredients: true,
+      tags: true,
+      favorites: true,
+      author: { select: { id: true, firstName: true, lastName: true, email: true } },
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -136,7 +141,7 @@ export async function getRecipe(req: AuthRequest, res: Response) {
       ingredients: true,
       tags: true,
       comments: { include: { user: { select: { id: true, firstName: true, lastName: true } } } },
-      author: { select: { id: true, firstName: true, lastName: true } },
+      author: { select: { id: true, firstName: true, lastName: true, email: true } },
     },
   });
 
@@ -213,7 +218,7 @@ export async function deleteRecipe(req: AuthRequest, res: Response) {
   const existing = await prisma.recipe.findUnique({ where: { id: recipeId } });
   if (!existing) return res.status(404).json({ error: "Recipe not found" });
 
- if (existing.authorId !== req.userId) {
+  if (existing.authorId !== req.userId) {
     return res.status(403).json({ error: "Only the author can delete this recipe" });
   }
 
@@ -272,4 +277,3 @@ export async function addToCookbook(req: AuthRequest, res: Response) {
 
   return res.json({ recipe: updated });
 }
-

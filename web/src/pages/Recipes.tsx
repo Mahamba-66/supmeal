@@ -60,6 +60,11 @@ export default function Recipes() {
                 {isFav && <span className="ml-2 text-yellow-500">*Favori</span>}
                 <span className="ml-2 text-sm text-gray-500">
                   {r.prepTime + r.cookTime} min - {r.servings} portions
+                  {r.author && (
+                    r.author.id === currentUser?.id
+                      ? " - Crée par vous"
+                      : ` - Crée par ${r.author.firstName} ${r.author.lastName} (${r.author.email})`
+                  )}
                 </span>
                 <div className="mt-1 flex gap-1">
                   {r.tags.map((t) => (

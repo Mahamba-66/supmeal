@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { api } from "../lib/api";
+import { roleLabel } from "../lib/roles";
 import type { CookbookDetail, Recipe } from "../lib/types";
 
 export default function CookbookDetailPage() {
@@ -126,7 +127,7 @@ setError(typeof errData76 === "string" ? errData76 : "Erreur lors de l'ajout");
           <ul className="flex flex-col gap-2 mb-6">
             {cookbook.members.map((m) => (
               <li key={m.id} className="text-sm">
-                {m.user.firstName} {m.user.lastName} ({m.user.email}) - <span className="font-semibold">{m.role}</span>
+               {m.user.firstName} {m.user.lastName} ({m.user.email}) - <span className="font-semibold">{roleLabel(m.role)}</span>
                 {m.status === "PENDING" && <span className="ml-2 text-xs text-orange-500">(en attente)</span>}
               </li>
             ))}

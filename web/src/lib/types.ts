@@ -34,6 +34,13 @@ export interface Favorite {
   userId: string;
 }
 
+export interface Author {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
 export interface Recipe {
   id: string;
   title: string;
@@ -49,6 +56,7 @@ export interface Recipe {
   tags: Tag[];
   favorites?: Favorite[];
   myCookbookRole?: string | null;
+  author?: Author;
 }
 
 export interface PendingInvite {

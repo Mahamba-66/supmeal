@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
+import { roleLabel } from "../lib/roles";
 import type { Cookbook } from "../lib/types";
 
 export default function Cookbooks() {
@@ -58,7 +59,7 @@ setError(typeof errData === "string" ? errData : "Erreur lors de la creation");
               className="block border rounded px-4 py-3 hover:bg-gray-50"
             >
               <span className="font-semibold">{cb.name}</span>
-              <span className="ml-2 text-sm text-gray-500">({cb.myRole})</span>
+              <span className="ml-2 text-sm text-gray-500">({roleLabel(cb.myRole ?? "")})</span>
             </Link>
           </li>
         ))}
