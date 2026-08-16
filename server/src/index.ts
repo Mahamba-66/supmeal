@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { createServer } from "node:http";
+import passport from "./passport.js";
 import { prisma } from "./db.js";
 import { initSocket } from "./socket.js";
 import authRoutes from "./routes/auth.routes.js";
@@ -12,6 +13,7 @@ import dataRoutes from "./routes/data.routes.js";
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(passport.initialize());
 
 app.use("/auth", authRoutes);
 app.use("/cookbooks", cookbookRoutes);

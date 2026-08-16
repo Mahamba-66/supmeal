@@ -14,6 +14,7 @@ import MealPlans from "./pages/MealPlans";
 import MealPlanDetail from "./pages/MealPlanDetail";
 import DataManagement from "./pages/DataManagement";
 import Profile from "./pages/Profile";
+import OAuthCallback from "./pages/OAuthCallback";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/oauth-callback" element={<OAuthCallback />} />
         <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/cookbooks" element={<ProtectedRoute><Cookbooks /></ProtectedRoute>} />
         <Route path="/cookbooks/:cookbookId" element={<ProtectedRoute><CookbookDetailPage /></ProtectedRoute>} />

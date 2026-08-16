@@ -108,6 +108,11 @@ setError(message);
           S'inscrire
         </button>
       </form>
+      <div className="mt-4 text-center">
+  <a href="http://localhost:3000/auth/google" className="inline-block border rounded px-4 py-2 text-sm">
+    Se connecter avec Google
+  </a>
+</div>
       <p className="mt-4 text-sm">
         Deja un compte ? <Link to="/login" className="text-purple-600">Se connecter</Link>
       </p>
