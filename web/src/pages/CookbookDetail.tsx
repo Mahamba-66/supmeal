@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { roleLabel } from "../lib/roles";
+import { useAuthStore } from "../store/authStore";
 import type { CookbookDetail, Recipe } from "../lib/types";
 
 export default function CookbookDetailPage() {
   const { cookbookId } = useParams();
   const navigate = useNavigate();
+  const currentUser = useAuthStore((s) => s.user);
   const [cookbook, setCookbook] = useState<CookbookDetail | null>(null);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("READER");
@@ -42,8 +44,8 @@ export default function CookbookDetailPage() {
       setInviteEmail("");
       loadCookbook();
     } catch (err: any) {
-      const errData44 = err.response?.data?.error;
-setError(typeof errData44 === "string" ? errData44 : "Erreur lors de l'invitation");
+      const errData = err.response?.data?.error;
+      setError(typeof errData === "string" ? errData : "Erreur lors de l'invitation");
     }
   }
 
@@ -54,8 +56,8 @@ setError(typeof errData44 === "string" ? errData44 : "Erreur lors de l'invitatio
       setIsEditing(false);
       loadCookbook();
     } catch (err: any) {
-      const errData55 = err.response?.data?.error;
-setError(typeof errData55 === "string" ? errData55 : "Erreur lors de la modification");
+      const errData = err.response?.data?.error;
+      setError(typeof errData === "string" ? errData : "Erreur lors de la modification");
     }
   }
 
@@ -76,8 +78,31 @@ setError(typeof errData55 === "string" ? errData55 : "Erreur lors de la modifica
       loadCookbook();
       loadPersonalRecipes();
     } catch (err: any) {
-     const errData76 = err.response?.data?.error;
-setError(typeof errData76 === "string" ? errData76 : "Erreur lors de l'ajout");
+      const errData = err.response?.data?.error;
+      setError(typeof errData === "string" ? errData : "Erreur lors de l'ajout");
+    }
+  }
+
+  async function handleRemoveMember(memberId: string) {
+    if (!confirm("Exclure ce membre du cookbook ?")) return;
+    try {
+      await api.delete(`/cookbooks/${cookbookId}/members/${memberId}`);
+      loadCookbook();
+    } catch (err: any) {
+      const errData = err.response?.data?.error;
+      setError(typeof errData === "string" ? errData : "Erreur lors de l'exclusion");
+    }
+  }
+
+  async function handleLeave() {
+    if (!confirm("Voulez-vous quitter ce cookbook ?")) return;
+    try {
+      await api.post(`/cookbooks/${cookbookId}/leave`);
+      alert("Vous avez quitte le cookbook");
+      navigate("/cookbooks");
+    } catch (err: any) {
+      const errData = err.response?.data?.error;
+      setError(typeof errData === "string" ? errData : "Erreur");
     }
   }
 
@@ -89,9 +114,9 @@ setError(typeof errData76 === "string" ? errData76 : "Erreur lors de l'ajout");
   return (
     <div className="max-w-2xl mx-auto mt-10 p-6">
       <div className="flex justify-between items-center">
-  <Link to="/cookbooks" className="text-sm text-purple-600">{"<- Retour"}</Link>
-  <Link to={`/cookbooks/${cookbookId}/chat`} className="text-sm text-purple-600">Discussion {"->"}</Link>
-</div>
+        <Link to="/cookbooks" className="text-sm text-purple-600">{"<- Retour"}</Link>
+        <Link to={`/cookbooks/${cookbookId}/chat`} className="text-sm text-purple-600">Discussion {"->"}</Link>
+      </div>
 
       <div className="flex justify-between items-center mt-2 mb-6">
         {isEditing ? (
@@ -119,6 +144,11 @@ setError(typeof errData76 === "string" ? errData76 : "Erreur lors de l'ajout");
             </button>
           </div>
         )}
+        {!isOwner && (
+          <button onClick={handleLeave} className="px-3 py-1 rounded border bg-red-50 text-red-600 text-sm">
+            Quitter le cookbook
+          </button>
+        )}
       </div>
 
       {isOwner && cookbook.members && (
@@ -126,9 +156,16 @@ setError(typeof errData76 === "string" ? errData76 : "Erreur lors de l'ajout");
           <h2 className="text-lg font-semibold mb-2">Membres</h2>
           <ul className="flex flex-col gap-2 mb-6">
             {cookbook.members.map((m) => (
-              <li key={m.id} className="text-sm">
-               {m.user.firstName} {m.user.lastName} ({m.user.email}) - <span className="font-semibold">{roleLabel(m.role)}</span>
-                {m.status === "PENDING" && <span className="ml-2 text-xs text-orange-500">(en attente)</span>}
+              <li key={m.id} className="text-sm flex justify-between items-center">
+                <span>
+                  {m.user.firstName} {m.user.lastName} ({m.user.email}) - <span className="font-semibold">{roleLabel(m.role)}</span>
+                  {m.status === "PENDING" && <span className="ml-2 text-xs text-orange-500">(en attente)</span>}
+                </span>
+                {m.role !== "OWNER" && (
+                  <button onClick={() => handleRemoveMember(m.id)} className="text-red-600 text-xs">
+                    Exclure
+                  </button>
+                )}
               </li>
             ))}
           </ul>

@@ -21,6 +21,9 @@ export default function RecipeCreate() {
   const [tagsInput, setTagsInput] = useState("");
   const [cookbooks, setCookbooks] = useState<Cookbook[]>([]);
   const [cookbookId, setCookbookId] = useState(preselectedCookbookId);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -32,6 +35,13 @@ export default function RecipeCreate() {
       setCookbooks(editable);
     });
   }, []);
+
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  }
 
   function updateIngredient(index: number, field: keyof IngredientInput, value: string) {
     const next = [...ingredients];
@@ -60,6 +70,19 @@ export default function RecipeCreate() {
     const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
 
     try {
+      let imageUrl: string | undefined;
+
+      if (imageFile) {
+        setUploading(true);
+        const formData = new FormData();
+        formData.append("image", imageFile);
+        const uploadRes = await api.post("/upload/image", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        imageUrl = `http://localhost:3000${uploadRes.data.imageUrl}`;
+        setUploading(false);
+      }
+
       const res = await api.post("/recipes", {
         title,
         steps,
@@ -69,11 +92,13 @@ export default function RecipeCreate() {
         ingredients: validIngredients,
         tags,
         ...(cookbookId ? { cookbookId } : {}),
+        ...(imageUrl ? { imageUrl } : {}),
       });
       navigate(`/recipes/${res.data.recipe.id}`);
     } catch (err: any) {
+      setUploading(false);
       const errData = err.response?.data?.error;
-setError(typeof errData === "string" ? errData : "Erreur lors de la creation");
+      setError(typeof errData === "string" ? errData : "Erreur lors de la creation");
     }
   }
 
@@ -91,6 +116,26 @@ setError(typeof errData === "string" ? errData : "Erreur lors de la creation");
           className="border rounded px-3 py-2"
           required
         />
+
+        <div>
+          <label className="text-sm font-medium mb-1 block">Photo de la recette</label>
+          {imagePreview && (
+            <img src={imagePreview} alt="Apercu" className="w-full h-48 object-cover rounded mb-2" />
+          )}
+          <input
+            id="recipe-image-input"
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="hidden"
+          />
+          <label
+            htmlFor="recipe-image-input"
+            className="inline-block cursor-pointer bg-gray-100 hover:bg-gray-200 text-sm font-medium rounded px-4 py-2"
+          >
+            Choisir une photo
+          </label>
+        </div>
 
         <label className="flex flex-col text-sm gap-1">
           Emplacement
@@ -165,11 +210,7 @@ setError(typeof errData === "string" ? errData : "Erreur lors de la creation");
                 onChange={(e) => updateIngredient(i, "quantity", e.target.value)}
                 className="border rounded px-3 py-2 w-32"
               />
-              <button
-                type="button"
-                onClick={() => removeIngredient(i)}
-                className="text-red-500 px-2"
-              >
+              <button type="button" onClick={() => removeIngredient(i)} className="text-red-500 px-2">
                 x
               </button>
             </div>
@@ -189,8 +230,8 @@ setError(typeof errData === "string" ? errData : "Erreur lors de la creation");
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
-        <button type="submit" className="bg-purple-600 text-white rounded px-4 py-2">
-          Creer la recette
+        <button type="submit" disabled={uploading} className="bg-purple-600 text-white rounded px-4 py-2 disabled:opacity-50">
+          {uploading ? "Envoi de la photo..." : "Creer la recette"}
         </button>
       </form>
     </div>

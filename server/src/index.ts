@@ -9,17 +9,20 @@ import cookbookRoutes from "./routes/cookbook.routes.js";
 import recipeRoutes from "./routes/recipe.routes.js";
 import mealPlanRoutes from "./routes/mealplan.routes.js";
 import dataRoutes from "./routes/data.routes.js";
+import uploadRoutes from "./routes/upload.routes.js";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(passport.initialize());
+app.use("/uploads", express.static("uploads"));
 
 app.use("/auth", authRoutes);
 app.use("/cookbooks", cookbookRoutes);
 app.use("/recipes", recipeRoutes);
 app.use("/mealplans", mealPlanRoutes);
 app.use("/data", dataRoutes);
+app.use("/upload", uploadRoutes);
 
 app.get("/health", async (req, res) => {
   try {

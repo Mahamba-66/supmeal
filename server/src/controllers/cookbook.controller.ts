@@ -175,7 +175,7 @@ export async function inviteMember(req: AuthRequest, res: Response) {
   });
 
   if (existingMembership) {
-    return res.status(409).json({ error: "User already invited or already a member" });
+    return res.status(409).json({ error: "Cet utilisateur est déjà invité ou déjà membre" });
   }
 
   const membership = await prisma.cookbookMember.create({
@@ -227,5 +227,57 @@ export async function deleteCookbook(req: AuthRequest, res: Response) {
   }
 
   await prisma.cookbook.delete({ where: { id: cookbookId } });
+  return res.status(204).send();
+}
+
+export async function removeMember(req: AuthRequest, res: Response) {
+  if (!req.userId) return res.status(401).json({ error: "Unauthorized" });
+
+  const cookbookId = req.params.cookbookId;
+  const memberId = req.params.memberId;
+  if (!cookbookId || typeof cookbookId !== "string" || !memberId || typeof memberId !== "string") {
+    return res.status(400).json({ error: "cookbookId and memberId are required" });
+  }
+
+  const requesterMembership = await prisma.cookbookMember.findUnique({
+    where: { userId_cookbookId: { userId: req.userId, cookbookId } },
+  });
+  if (!requesterMembership || requesterMembership.role !== "OWNER") {
+    return res.status(403).json({ error: "Requires OWNER role" });
+  }
+
+  const targetMember = await prisma.cookbookMember.findUnique({ where: { id: memberId } });
+  if (!targetMember || targetMember.cookbookId !== cookbookId) {
+    return res.status(404).json({ error: "Member not found" });
+  }
+
+  if (targetMember.role === "OWNER") {
+    return res.status(403).json({ error: "Cannot remove the owner" });
+  }
+
+  await prisma.cookbookMember.delete({ where: { id: memberId } });
+  return res.status(204).send();
+}
+
+export async function leaveCookbook(req: AuthRequest, res: Response) {
+  if (!req.userId) return res.status(401).json({ error: "Unauthorized" });
+
+  const cookbookId = req.params.cookbookId;
+  if (!cookbookId || typeof cookbookId !== "string") {
+    return res.status(400).json({ error: "cookbookId is required" });
+  }
+
+  const membership = await prisma.cookbookMember.findUnique({
+    where: { userId_cookbookId: { userId: req.userId, cookbookId } },
+  });
+  if (!membership) {
+    return res.status(404).json({ error: "You are not a member of this cookbook" });
+  }
+
+  if (membership.role === "OWNER") {
+    return res.status(403).json({ error: "The owner cannot leave the cookbook. Delete it instead." });
+  }
+
+  await prisma.cookbookMember.delete({ where: { id: membership.id } });
   return res.status(204).send();
 }

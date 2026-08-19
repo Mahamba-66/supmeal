@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAuthStore } from "../store/authStore";
+import Layout from "../components/Layout";
 import type { Recipe } from "../lib/types";
+import { Clock, Users, Star, Pencil, Trash2, ArrowLeft } from "lucide-react";
+
+const FALLBACK_IMG = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200^&q=80";
 
 interface Comment {
   id: string;
@@ -76,7 +80,7 @@ export default function RecipeDetail() {
     navigate("/recipes");
   }
 
-  if (!recipe) return <div className="p-8">Chargement...</div>;
+  if (!recipe) return <Layout><p>Chargement...</p></Layout>;
 
   const canEdit = recipe.authorId === currentUser?.id;
   const isPersonalRecipe = !recipe.cookbookId;
@@ -88,117 +92,124 @@ export default function RecipeDetail() {
       recipe.myCookbookRole !== "READER");
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-6">
-      <div className="flex gap-4 text-sm text-purple-600">
-        <Link to="/">{"<- Tableau de bord"}</Link>
-        <Link to="/recipes">{"<- Recettes"}</Link>
-        <Link to="/cookbooks">{"<- Cookbooks"}</Link>
-      </div>
+    <Layout>
+      <Link to="/recipes" className="inline-flex items-center gap-1 text-sm text-ink/50 hover:text-paprika mb-4">
+        <ArrowLeft size={14} /> Recettes
+      </Link>
 
-      <div className="flex justify-between items-start mt-4 mb-4">
-        <h1 className="text-2xl font-bold">{recipe.title}</h1>
-        <div className="flex gap-2">
+      <div className="relative h-72 rounded-2xl overflow-hidden mb-6 bg-line">
+        <img src={recipe.imageUrl || FALLBACK_IMG} alt={recipe.title} className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-6 flex justify-between items-end">
+          <h1 className="font-display text-3xl font-bold text-white">{recipe.title}</h1>
           <button
             onClick={toggleFavorite}
-            className={`px-3 py-1 rounded border ${isFavorited ? "bg-yellow-400 border-yellow-500" : "bg-white"}`}
+            className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
+              isFavorited ? "bg-gold text-indigo" : "bg-white/20 text-white backdrop-blur"
+            }`}
           >
-            {isFavorited ? "Favori" : "+ Favori"}
+            <Star size={18} fill={isFavorited ? "currentColor" : "none"} />
           </button>
-          {canEdit && (
-            <>
-              <Link to={`/recipes/${recipeId}/edit`} className="px-3 py-1 rounded border bg-white">
-                Modifier
-              </Link>
-              <button onClick={handleDelete} className="px-3 py-1 rounded border bg-red-50 text-red-600">
-                Supprimer
-              </button>
-            </>
-          )}
         </div>
       </div>
 
-      <p className="text-sm text-gray-500 mb-4">
-        Preparation: {recipe.prepTime} min - Cuisson: {recipe.cookTime} min - {recipe.servings} portions
-      </p>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-6 font-mono text-sm text-ink/60">
+          <span className="flex items-center gap-1.5"><Clock size={15} /> {recipe.prepTime + recipe.cookTime} min</span>
+          <span className="flex items-center gap-1.5"><Users size={15} /> {recipe.servings} portions</span>
+        </div>
+        {canEdit && (
+          <div className="flex gap-2">
+            <Link to={`/recipes/${recipeId}/edit`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-line text-sm hover:bg-cream">
+              <Pencil size={14} /> Modifier
+            </Link>
+            <button onClick={handleDelete} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 text-sm hover:bg-red-50">
+              <Trash2 size={14} /> Supprimer
+            </button>
+          </div>
+        )}
+      </div>
 
-      <div className="flex gap-1 mb-6">
+      <div className="flex gap-1.5 mb-8">
         {recipe.tags.map((t) => (
-          <span key={t.id} className="text-xs bg-purple-100 text-purple-700 rounded px-2 py-0.5">
+          <span key={t.id} className="text-xs bg-paprika/10 text-paprika-dark rounded-full px-3 py-1 font-medium">
             {t.name}
           </span>
         ))}
       </div>
 
-      <h2 className="font-semibold mb-2">Ingredients</h2>
-      <ul className="mb-6 list-disc list-inside">
-        {recipe.ingredients.map((i) => (
-          <li key={i.id}>{i.quantity} {i.name}</li>
-        ))}
-      </ul>
+      <div className="grid grid-cols-3 gap-8">
+        <div>
+          <h2 className="font-display font-semibold text-lg mb-3">Ingredients</h2>
+          <ul className="flex flex-col gap-2">
+            {recipe.ingredients.map((i) => (
+              <li key={i.id} className="text-sm flex justify-between border-b border-line pb-2">
+                <span>{i.name}</span>
+                <span className="font-mono text-ink/50">{i.quantity}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-      <h2 className="font-semibold mb-2">Etapes</h2>
-      <p className="mb-6 whitespace-pre-line">{recipe.steps}</p>
+        <div className="col-span-2">
+          <h2 className="font-display font-semibold text-lg mb-3">Preparation</h2>
+          <p className="text-sm leading-relaxed whitespace-pre-line text-ink/80">{recipe.steps}</p>
+        </div>
+      </div>
 
-      <h2 className="font-semibold mb-2">Commentaires</h2>
-      <ul className="flex flex-col gap-2 mb-4">
-        {comments.map((c) => {
-          const isCommentAuthor = c.userId === currentUser?.id;
-          const isEditingThis = editingCommentId === c.id;
-
-          return (
-            <li key={c.id} className="text-sm border-b pb-2">
-              {isEditingThis ? (
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={editingContent}
-                    onChange={(e) => setEditingContent(e.target.value)}
-                    className="border rounded px-2 py-1 flex-1"
-                  />
-                  <button onClick={() => handleUpdateComment(c.id)} className="text-purple-600">
-                    Enregistrer
-                  </button>
-                  <button onClick={cancelEditComment} className="text-gray-500">
-                    Annuler
-                  </button>
-                </div>
-              ) : (
-                <div className="flex justify-between items-center">
-                  <span>
-                    <span className="font-semibold">{c.user.firstName} {c.user.lastName}</span>: {c.content}
-                  </span>
-                  {isCommentAuthor && (
-                    <span className="flex gap-2 text-xs">
-                      <button onClick={() => startEditComment(c)} className="text-purple-600">
-                        Modifier
-                      </button>
-                      <button onClick={() => handleDeleteComment(c.id)} className="text-red-600">
-                        Supprimer
-                      </button>
+      <div className="mt-10 pt-8 border-t border-line">
+        <h2 className="font-display font-semibold text-lg mb-4">Commentaires</h2>
+        <ul className="flex flex-col gap-3 mb-4">
+          {comments.map((c) => {
+            const isCommentAuthor = c.userId === currentUser?.id;
+            const isEditingThis = editingCommentId === c.id;
+            return (
+              <li key={c.id} className="text-sm bg-paper border border-line rounded-xl p-3">
+                {isEditingThis ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={editingContent}
+                      onChange={(e) => setEditingContent(e.target.value)}
+                      className="border border-line rounded px-2 py-1 flex-1 text-sm"
+                    />
+                    <button onClick={() => handleUpdateComment(c.id)} className="text-paprika text-xs font-medium">Enregistrer</button>
+                    <button onClick={cancelEditComment} className="text-ink/40 text-xs">Annuler</button>
+                  </div>
+                ) : (
+                  <div className="flex justify-between items-center">
+                    <span>
+                      <span className="font-semibold">{c.user.firstName} {c.user.lastName}</span>: {c.content}
                     </span>
-                  )}
-                </div>
-              )}
-            </li>
-          );
-        })}
-        {comments.length === 0 && <p className="text-gray-500 text-sm">Aucun commentaire.</p>}
-      </ul>
+                    {isCommentAuthor && (
+                      <span className="flex gap-2 text-xs shrink-0 ml-2">
+                        <button onClick={() => startEditComment(c)} className="text-paprika">Modifier</button>
+                        <button onClick={() => handleDeleteComment(c.id)} className="text-red-500">Supprimer</button>
+                      </span>
+                    )}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+          {comments.length === 0 && <p className="text-ink/40 text-sm">Aucun commentaire.</p>}
+        </ul>
 
-      {canComment && (
-        <form onSubmit={handleAddComment} className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Ajouter un commentaire"
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            className="border rounded px-3 py-2 flex-1"
-          />
-          <button type="submit" className="bg-purple-600 text-white rounded px-4 py-2">
-            Envoyer
-          </button>
-        </form>
-      )}
-    </div>
+        {canComment && (
+          <form onSubmit={handleAddComment} className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Ajouter un commentaire"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              className="border border-line rounded-lg px-3 py-2 flex-1 text-sm focus:outline-none focus:border-paprika"
+            />
+            <button type="submit" className="bg-indigo text-cream rounded-lg px-4 py-2 text-sm font-medium">
+              Envoyer
+            </button>
+          </form>
+        )}
+      </div>
+    </Layout>
   );
 }

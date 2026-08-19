@@ -11,6 +11,8 @@ import {
   listPendingInvites,
   acceptInvite,
   declineInvite,
+  removeMember,
+  leaveCookbook,
 } from "../controllers/cookbook.controller.js";
 import { listMessages } from "../controllers/message.controller.js";
 
@@ -27,6 +29,8 @@ router.get("/:cookbookId", getCookbook);
 router.put("/:cookbookId", updateCookbook);
 router.delete("/:cookbookId", deleteCookbook);
 router.post("/:cookbookId/invite", requireCookbookRole("OWNER"), inviteMember);
+router.delete("/:cookbookId/members/:memberId", removeMember);
+router.post("/:cookbookId/leave", leaveCookbook);
 router.get("/:cookbookId/messages", listMessages);
 
 export default router;

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { api } from "../lib/api";
+import type { Cookbook } from "../lib/types";
 
 interface IngredientInput {
   name: string;
@@ -17,6 +18,12 @@ export default function RecipeEdit() {
   const [servings, setServings] = useState(4);
   const [ingredients, setIngredients] = useState<IngredientInput[]>([{ name: "", quantity: "" }]);
   const [tagsInput, setTagsInput] = useState("");
+  const [cookbooks, setCookbooks] = useState<Cookbook[]>([]);
+  const [cookbookId, setCookbookId] = useState("");
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
 
@@ -30,9 +37,24 @@ export default function RecipeEdit() {
       setServings(r.servings);
       setIngredients(r.ingredients.map((i: any) => ({ name: i.name, quantity: i.quantity })));
       setTagsInput(r.tags.map((t: any) => t.name).join(", "));
+      setCurrentImageUrl(r.imageUrl);
+      setCookbookId(r.cookbookId ?? "");
       setLoaded(true);
     });
+    api.get("/cookbooks").then((res) => {
+      const editable = res.data.cookbooks.filter(
+        (cb: Cookbook) => cb.myRole === "OWNER" || cb.myRole === "EDITOR"
+      );
+      setCookbooks(editable);
+    });
   }, [recipeId]);
+
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  }
 
   function updateIngredient(index: number, field: keyof IngredientInput, value: string) {
     const next = [...ingredients];
@@ -56,6 +78,19 @@ export default function RecipeEdit() {
     const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
 
     try {
+      let imageUrl: string | undefined;
+
+      if (imageFile) {
+        setUploading(true);
+        const formData = new FormData();
+        formData.append("image", imageFile);
+        const uploadRes = await api.post("/upload/image", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        imageUrl = `http://localhost:3000${uploadRes.data.imageUrl}`;
+        setUploading(false);
+      }
+
       await api.put(`/recipes/${recipeId}`, {
         title,
         steps,
@@ -64,11 +99,14 @@ export default function RecipeEdit() {
         servings,
         ingredients: validIngredients,
         tags,
+        cookbookId: cookbookId || null,
+        ...(imageUrl ? { imageUrl } : {}),
       });
       navigate(`/recipes/${recipeId}`);
     } catch (err: any) {
+      setUploading(false);
       const errData = err.response?.data?.error;
-setError(typeof errData === "string" ? errData : "Erreur lors de la creation");
+      setError(typeof errData === "string" ? errData : "Erreur lors de la modification");
     }
   }
 
@@ -87,6 +125,43 @@ setError(typeof errData === "string" ? errData : "Erreur lors de la creation");
           className="border rounded px-3 py-2"
           required
         />
+
+        <div>
+          <label className="text-sm font-medium mb-1 block">Photo de la recette</label>
+          <img
+            src={imagePreview || currentImageUrl || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600^&q=80"}
+            alt="Apercu"
+            className="w-full h-48 object-cover rounded mb-2"
+          />
+          <input
+            id="recipe-image-input"
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="hidden"
+          />
+          <label
+            htmlFor="recipe-image-input"
+            className="inline-block cursor-pointer bg-gray-100 hover:bg-gray-200 text-sm font-medium rounded px-4 py-2"
+          >
+            Choisir une photo
+          </label>
+          <p className="text-xs text-gray-500 mt-1">Laisser vide pour garder la photo actuelle</p>
+        </div>
+
+        <label className="flex flex-col text-sm gap-1">
+          Emplacement
+          <select
+            value={cookbookId}
+            onChange={(e) => setCookbookId(e.target.value)}
+            className="border rounded px-3 py-2"
+          >
+            <option value="">Recette personnelle</option>
+            {cookbooks.map((cb) => (
+              <option key={cb.id} value={cb.id}>{cb.name}</option>
+            ))}
+          </select>
+        </label>
 
         <textarea
           value={steps}
@@ -166,8 +241,8 @@ setError(typeof errData === "string" ? errData : "Erreur lors de la creation");
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
-        <button type="submit" className="bg-purple-600 text-white rounded px-4 py-2">
-          Enregistrer
+        <button type="submit" disabled={uploading} className="bg-purple-600 text-white rounded px-4 py-2 disabled:opacity-50">
+          {uploading ? "Envoi de la photo..." : "Enregistrer"}
         </button>
       </form>
     </div>

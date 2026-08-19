@@ -78,6 +78,8 @@ export async function listMealPlans(req: AuthRequest, res: Response) {
 }
 
 export async function getMealPlan(req: AuthRequest, res: Response) {
+  if (!req.userId) return res.status(401).json({ error: "Unauthorized" });
+
   const mealPlanId = req.params.mealPlanId;
   if (!mealPlanId || typeof mealPlanId !== "string") {
     return res.status(400).json({ error: "mealPlanId is required" });
@@ -92,7 +94,20 @@ export async function getMealPlan(req: AuthRequest, res: Response) {
 
   if (!mealPlan) return res.status(404).json({ error: "MealPlan not found" });
 
-  return res.json({ mealPlan });
+  if (mealPlan.userId === req.userId) {
+    return res.json({ mealPlan });
+  }
+
+  if (mealPlan.cookbookId) {
+    const membership = await prisma.cookbookMember.findUnique({
+      where: { userId_cookbookId: { userId: req.userId, cookbookId: mealPlan.cookbookId } },
+    });
+    if (membership && membership.status === "ACCEPTED") {
+      return res.json({ mealPlan });
+    }
+  }
+
+  return res.status(403).json({ error: "You do not have access to this meal plan" });
 }
 
 async function assertCanEditMealPlan(userId: string, mealPlanId: string) {

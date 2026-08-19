@@ -21,7 +21,7 @@ const createRecipeSchema = z.object({
   tags: z.array(z.string().min(1)).optional().default([]),
 });
 
-const updateRecipeSchema = createRecipeSchema.partial().omit({ cookbookId: true });
+const updateRecipeSchema = createRecipeSchema.partial();
 
 async function assertCanEditCookbook(userId: string, cookbookId: string) {
   const membership = await prisma.cookbookMember.findUnique({
@@ -176,7 +176,14 @@ export async function updateRecipe(req: AuthRequest, res: Response) {
   const parsed = updateRecipeSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
-  const { ingredients, tags, ...fields } = parsed.data;
+  const { ingredients, tags, cookbookId, ...fields } = parsed.data;
+
+  if (cookbookId !== undefined && cookbookId !== existing.cookbookId) {
+    if (cookbookId) {
+      const err = await assertCanEditCookbook(req.userId, cookbookId);
+      if (err) return res.status(403).json({ error: err });
+    }
+  }
 
   const updateData: Record<string, unknown> = {};
   if (fields.title !== undefined) updateData.title = fields.title;
@@ -186,6 +193,7 @@ export async function updateRecipe(req: AuthRequest, res: Response) {
   if (fields.servings !== undefined) updateData.servings = fields.servings;
   if (fields.imageUrl !== undefined) updateData.imageUrl = fields.imageUrl;
   if (fields.source !== undefined) updateData.source = fields.source;
+  if (cookbookId !== undefined) updateData.cookbookId = cookbookId || null;
 
   if (ingredients) {
     updateData.ingredients = { deleteMany: {}, create: ingredients };
