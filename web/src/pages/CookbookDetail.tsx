@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { roleLabel } from "../lib/roles";
-import { useAuthStore } from "../store/authStore";
+import Layout from "../components/Layout";
 import type { CookbookDetail, Recipe } from "../lib/types";
+import { ArrowLeft, MessageCircle, Pencil, Trash2, LogOut, Plus, UserMinus } from "lucide-react";
+
+const FALLBACK_IMG = "https://commons.wikimedia.org/wiki/Special:FilePath/Thieboudienne.JPG";
 
 export default function CookbookDetailPage() {
   const { cookbookId } = useParams();
   const navigate = useNavigate();
-  const currentUser = useAuthStore((s) => s.user);
   const [cookbook, setCookbook] = useState<CookbookDetail | null>(null);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("READER");
@@ -64,7 +66,7 @@ export default function CookbookDetailPage() {
   async function handleDelete() {
     if (!confirm("Voulez-vous supprimer ce cookbook ?")) return;
     await api.delete(`/cookbooks/${cookbookId}`);
-    alert("Cookbook supprime avec succes");
+    alert("Cookbook supprimé avec succès");
     navigate("/cookbooks");
   }
 
@@ -98,7 +100,7 @@ export default function CookbookDetailPage() {
     if (!confirm("Voulez-vous quitter ce cookbook ?")) return;
     try {
       await api.post(`/cookbooks/${cookbookId}/leave`);
-      alert("Vous avez quitte le cookbook");
+      alert("Vous avez quitté le cookbook");
       navigate("/cookbooks");
     } catch (err: any) {
       const errData = err.response?.data?.error;
@@ -106,140 +108,154 @@ export default function CookbookDetailPage() {
     }
   }
 
-  if (!cookbook) return <div className="p-8">Chargement...</div>;
+  if (!cookbook) return <Layout><p>Chargement...</p></Layout>;
 
   const isOwner = cookbook.myRole === "OWNER";
   const canAddRecipe = cookbook.myRole === "OWNER" || cookbook.myRole === "EDITOR";
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-6">
-      <div className="flex justify-between items-center">
-        <Link to="/cookbooks" className="text-sm text-purple-600">{"<- Retour"}</Link>
-        <Link to={`/cookbooks/${cookbookId}/chat`} className="text-sm text-purple-600">Discussion {"->"}</Link>
+    <Layout>
+      <div className="flex justify-between items-center mb-4">
+        <Link to="/cookbooks" className="inline-flex items-center gap-1 text-sm text-ink/50 hover:text-paprika">
+          <ArrowLeft size={14} /> Cookbooks
+        </Link>
+        <Link
+          to={`/cookbooks/${cookbookId}/chat`}
+          className="flex items-center gap-1.5 text-sm bg-indigo text-cream px-3 py-1.5 rounded-lg font-medium hover:bg-indigo-light"
+        >
+          <MessageCircle size={14} /> Discussion
+        </Link>
       </div>
 
-      <div className="flex justify-between items-center mt-2 mb-6">
+      <div className="flex justify-between items-center mb-8">
         {isEditing ? (
           <form onSubmit={handleRename} className="flex gap-2">
             <input
               type="text"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="border rounded px-3 py-2"
+              className="border border-line rounded-lg px-3 py-2 text-sm"
             />
-            <button type="submit" className="bg-purple-600 text-white rounded px-3 py-2 text-sm">
+            <button type="submit" className="bg-paprika text-white rounded-lg px-3 py-2 text-sm font-medium">
               Enregistrer
             </button>
           </form>
         ) : (
-          <h1 className="text-2xl font-bold">{cookbook.name}</h1>
+          <h1 className="font-display text-3xl font-bold">{cookbook.name}</h1>
         )}
         {isOwner && !isEditing && (
           <div className="flex gap-2">
-            <button onClick={() => setIsEditing(true)} className="px-3 py-1 rounded border bg-white text-sm">
-              Renommer
+            <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-line text-sm hover:bg-paper">
+              <Pencil size={14} /> Renommer
             </button>
-            <button onClick={handleDelete} className="px-3 py-1 rounded border bg-red-50 text-red-600 text-sm">
-              Supprimer
+            <button onClick={handleDelete} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 text-sm hover:bg-red-50">
+              <Trash2 size={14} /> Supprimer
             </button>
           </div>
         )}
         {!isOwner && (
-          <button onClick={handleLeave} className="px-3 py-1 rounded border bg-red-50 text-red-600 text-sm">
-            Quitter le cookbook
+          <button onClick={handleLeave} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 text-sm hover:bg-red-50">
+            <LogOut size={14} /> Quitter
           </button>
         )}
       </div>
 
       {isOwner && cookbook.members && (
-        <>
-          <h2 className="text-lg font-semibold mb-2">Membres</h2>
-          <ul className="flex flex-col gap-2 mb-6">
+        <div className="bg-paper border border-line rounded-2xl p-5 mb-8">
+          <h2 className="font-display font-semibold mb-3">Membres</h2>
+          <ul className="flex flex-col gap-2 mb-4">
             {cookbook.members.map((m) => (
-              <li key={m.id} className="text-sm flex justify-between items-center">
+              <li key={m.id} className="flex justify-between items-center text-sm py-1.5 border-b border-line last:border-0">
                 <span>
-                  {m.user.firstName} {m.user.lastName} ({m.user.email}) - <span className="font-semibold">{roleLabel(m.role)}</span>
-                  {m.status === "PENDING" && <span className="ml-2 text-xs text-orange-500">(en attente)</span>}
+                  {m.user.firstName} {m.user.lastName}
+                  <span className="text-ink/40 ml-1">({m.user.email})</span>
+                  <span className="ml-2 font-mono text-xs uppercase text-paprika">{roleLabel(m.role)}</span>
+                  {m.status === "PENDING" && <span className="ml-2 text-xs text-gold">en attente</span>}
                 </span>
                 {m.role !== "OWNER" && (
-                  <button onClick={() => handleRemoveMember(m.id)} className="text-red-600 text-xs">
-                    Exclure
+                  <button onClick={() => handleRemoveMember(m.id)} className="text-red-500 hover:text-red-700">
+                    <UserMinus size={15} />
                   </button>
                 )}
               </li>
             ))}
           </ul>
 
-          <form onSubmit={handleInvite} className="flex gap-2 mb-8">
+          <form onSubmit={handleInvite} className="flex gap-2">
             <input
               type="email"
-              placeholder="Email a inviter"
+              placeholder="Email à inviter"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
-              className="border rounded px-3 py-2 flex-1"
+              className="flex-1 border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-paprika"
               required
             />
-            <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} className="border rounded px-3 py-2">
+            <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} className="border border-line rounded-lg px-3 py-2 text-sm">
               <option value="READER">Lecteur</option>
               <option value="COMMENTER">Commentateur</option>
-              <option value="EDITOR">Editeur</option>
+              <option value="EDITOR">Éditeur</option>
             </select>
-            <button type="submit" className="bg-purple-600 text-white rounded px-4 py-2">
+            <button type="submit" className="bg-indigo text-cream rounded-lg px-4 py-2 text-sm font-medium">
               Inviter
             </button>
           </form>
-        </>
+        </div>
       )}
       {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-lg font-semibold">Recettes</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="font-display text-xl font-semibold">Recettes</h2>
         {canAddRecipe && (
           <div className="flex gap-2">
             <button
               onClick={() => setShowAddExisting(!showAddExisting)}
-              className="border rounded px-3 py-1 text-sm"
+              className="text-sm border border-line rounded-lg px-3 py-1.5 hover:bg-paper"
             >
-              + Recette existante
+              Recette existante
             </button>
             <Link
               to={`/recipes/new?cookbookId=${cookbookId}`}
-              className="bg-purple-600 text-white rounded px-3 py-1 text-sm"
+              className="flex items-center gap-1.5 text-sm bg-paprika text-white rounded-lg px-3 py-1.5 font-medium"
             >
-              + Nouvelle recette
+              <Plus size={14} /> Nouvelle
             </Link>
           </div>
         )}
       </div>
 
       {showAddExisting && (
-        <form onSubmit={handleAddExisting} className="flex gap-2 mb-4">
+        <form onSubmit={handleAddExisting} className="flex gap-2 mb-6">
           <select
             value={selectedRecipeId}
             onChange={(e) => setSelectedRecipeId(e.target.value)}
-            className="border rounded px-3 py-2 flex-1"
+            className="flex-1 border border-line rounded-lg px-3 py-2 text-sm"
           >
             <option value="">Choisir une recette personnelle</option>
             {personalRecipes.map((r) => (
               <option key={r.id} value={r.id}>{r.title}</option>
             ))}
           </select>
-          <button type="submit" className="bg-purple-600 text-white rounded px-4 py-2 text-sm">
+          <button type="submit" className="bg-indigo text-cream rounded-lg px-4 py-2 text-sm font-medium">
             Ajouter
           </button>
         </form>
       )}
 
-      <ul className="flex flex-col gap-2">
+      <div className="grid grid-cols-3 gap-4">
         {cookbook.recipes.map((r) => (
-          <li key={r.id}>
-            <Link to={`/recipes/${r.id}`} className="block border rounded px-4 py-3 hover:bg-gray-50">
-              {r.title}
-            </Link>
-          </li>
+          <Link
+            key={r.id}
+            to={`/recipes/${r.id}`}
+            className="group bg-paper border border-line rounded-xl overflow-hidden hover:shadow-md transition-shadow"
+          >
+            <div className="h-28 overflow-hidden bg-line">
+              <img src={r.imageUrl || FALLBACK_IMG} alt={r.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+            </div>
+            <p className="font-display font-semibold p-3 truncate">{r.title}</p>
+          </Link>
         ))}
-        {cookbook.recipes.length === 0 && <p className="text-gray-500">Aucune recette pour l'instant.</p>}
-      </ul>
-    </div>
+      </div>
+      {cookbook.recipes.length === 0 && <p className="text-ink/50 text-sm">Aucune recette pour l'instant.</p>}
+    </Layout>
   );
 }

@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { api } from "../lib/api";
+import Layout from "../components/Layout";
 import type { MealPlan, Recipe } from "../lib/types";
+import { ArrowLeft, Trash2, X } from "lucide-react";
 
 const MEAL_TYPE_LABELS: Record<string, string> = {
-  BREAKFAST: "Petit-dejeuner",
-  LUNCH: "Dejeuner",
-  DINNER: "Diner",
+  BREAKFAST: "Petit-déjeuner",
+  LUNCH: "Déjeuner",
+  DINNER: "Dîner",
   SNACK: "Collation",
 };
 
@@ -64,30 +66,32 @@ export default function MealPlanDetail() {
   async function handleDeletePlan() {
     if (!confirm("Voulez-vous supprimer ce planning ?")) return;
     await api.delete(`/mealplans/${mealPlanId}`);
-    alert("Planning supprime avec succes");
+    alert("Planning supprimé avec succès");
     navigate("/mealplans");
   }
 
-  if (!mealPlan) return <div className="p-8">Chargement...</div>;
+  if (!mealPlan) return <Layout><p>Chargement...</p></Layout>;
 
   const sortedEntries = [...mealPlan.recipes].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-6">
-      <Link to="/mealplans" className="text-sm text-purple-600">{"<- Retour aux plannings"}</Link>
+    <Layout>
+      <Link to="/mealplans" className="inline-flex items-center gap-1 text-sm text-ink/50 hover:text-paprika mb-4">
+        <ArrowLeft size={14} /> Plannings
+      </Link>
 
-      <div className="flex justify-between items-center mt-2 mb-6">
-        <h1 className="text-2xl font-bold">{mealPlan.name}</h1>
-        <button onClick={handleDeletePlan} className="px-3 py-1 rounded border bg-red-50 text-red-600 text-sm">
-          Supprimer le planning
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="font-display text-3xl font-bold">{mealPlan.name}</h1>
+        <button onClick={handleDeletePlan} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 text-sm hover:bg-red-50">
+          <Trash2 size={14} /> Supprimer
         </button>
       </div>
 
-      <form onSubmit={handleAddRecipe} className="flex flex-col gap-2 mb-8 border rounded p-4">
-        <h2 className="font-semibold">Ajouter une recette</h2>
-        <select value={recipeId} onChange={(e) => setRecipeId(e.target.value)} className="border rounded px-3 py-2">
+      <form onSubmit={handleAddRecipe} className="bg-paper border border-line rounded-2xl p-5 mb-8 flex flex-col gap-3">
+        <h2 className="font-display font-semibold">Ajouter une recette</h2>
+        <select value={recipeId} onChange={(e) => setRecipeId(e.target.value)} className="border border-line rounded-lg px-3 py-2 text-sm">
           <option value="">Choisir une recette</option>
           {availableRecipes.map((r) => (
             <option key={r.id} value={r.id}>{r.title}</option>
@@ -95,16 +99,16 @@ export default function MealPlanDetail() {
         </select>
         <div className="flex gap-2">
           <input
-  type="date"
-  value={date}
-  onChange={(e) => setDate(e.target.value)}
-  min={new Date().toISOString().split("T")[0]}
-  className="border rounded px-3 py-2 flex-1"
-/>
-          <select value={mealType} onChange={(e) => setMealType(e.target.value)} className="border rounded px-3 py-2">
-            <option value="BREAKFAST">Petit-dejeuner</option>
-            <option value="LUNCH">Dejeuner</option>
-            <option value="DINNER">Diner</option>
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            min={new Date().toISOString().split("T")[0]}
+            className="border border-line rounded-lg px-3 py-2 text-sm flex-1"
+          />
+          <select value={mealType} onChange={(e) => setMealType(e.target.value)} className="border border-line rounded-lg px-3 py-2 text-sm">
+            <option value="BREAKFAST">Petit-déjeuner</option>
+            <option value="LUNCH">Déjeuner</option>
+            <option value="DINNER">Dîner</option>
             <option value="SNACK">Collation</option>
           </select>
           <input
@@ -112,41 +116,38 @@ export default function MealPlanDetail() {
             placeholder="Portions"
             value={servings}
             onChange={(e) => setServings(e.target.value)}
-            className="border rounded px-3 py-2 w-28"
+            className="border border-line rounded-lg px-3 py-2 text-sm w-28"
             min={1}
           />
         </div>
         {error && <p className="text-red-500 text-sm">{error}</p>}
-        <button type="submit" className="bg-purple-600 text-white rounded px-4 py-2">
+        <button type="submit" className="bg-indigo text-cream rounded-lg py-2.5 text-sm font-medium hover:bg-indigo-light">
           Ajouter au planning
         </button>
       </form>
 
-      <h2 className="font-semibold mb-2">Repas planifies</h2>
+      <h2 className="font-display text-xl font-semibold mb-4">Repas planifiés</h2>
       <ul className="flex flex-col gap-2">
         {sortedEntries.map((entry) => (
-          <li key={entry.id} className="border rounded px-4 py-3 flex justify-between items-center">
+          <li key={entry.id} className="bg-paper border border-line rounded-xl px-4 py-3 flex justify-between items-center">
             <div>
-              <span className="font-semibold">
-                {new Date(entry.date).toLocaleDateString("fr-FR")}
+              <span className="font-mono text-xs uppercase text-paprika">
+                {new Date(entry.date).toLocaleDateString("fr-FR")} · {entry.mealType && MEAL_TYPE_LABELS[entry.mealType]}
               </span>
-              <span className="ml-2 text-sm text-gray-500">
-                {entry.mealType && MEAL_TYPE_LABELS[entry.mealType]}
-              </span>
-              <div>
-                <Link to={`/recipes/${entry.recipe.id}`} className="text-purple-600">
+              <div className="flex items-center gap-2 mt-0.5">
+                <Link to={`/recipes/${entry.recipe.id}`} className="font-display font-semibold hover:text-paprika">
                   {entry.recipe.title}
                 </Link>
-                {entry.servings && <span className="ml-2 text-sm text-gray-500">({entry.servings} portions)</span>}
+                {entry.servings && <span className="text-sm text-ink/50">({entry.servings} portions)</span>}
               </div>
             </div>
-            <button onClick={() => handleRemoveEntry(entry.id)} className="text-red-600 text-sm">
-              Retirer
+            <button onClick={() => handleRemoveEntry(entry.id)} className="text-ink/30 hover:text-red-500">
+              <X size={16} />
             </button>
           </li>
         ))}
-        {sortedEntries.length === 0 && <p className="text-gray-500">Aucune recette planifiee.</p>}
+        {sortedEntries.length === 0 && <p className="text-ink/50 text-sm">Aucune recette planifiée.</p>}
       </ul>
-    </div>
+    </Layout>
   );
 }

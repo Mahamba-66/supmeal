@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { api } from "../lib/api";
+import Layout from "../components/Layout";
+import { User, Lock } from "lucide-react";
 
 interface ProfileData {
   id: string;
@@ -48,18 +49,12 @@ export default function Profile() {
     setInfoMessage(null);
     try {
       const allergies = allergiesInput.split(",").map((a) => a.trim()).filter(Boolean);
-      await api.put("/auth/me", {
-        firstName,
-        lastName,
-        diet: diet || null,
-        allergies,
-        defaultServings,
-      });
-      setInfoMessage("Profil mis a jour avec succes");
+      await api.put("/auth/me", { firstName, lastName, diet: diet || null, allergies, defaultServings });
+      setInfoMessage("Profil mis à jour avec succès");
       loadProfile();
     } catch (err: any) {
       const errData = err.response?.data?.error;
-      setInfoError(typeof errData === "string" ? errData : "Erreur lors de la mise a jour");
+      setInfoError(typeof errData === "string" ? errData : "Erreur lors de la mise à jour");
     }
   }
 
@@ -75,7 +70,7 @@ export default function Profile() {
 
     try {
       await api.put("/auth/me", { currentPassword, newPassword });
-      setPasswordMessage("Mot de passe modifie avec succes");
+      setPasswordMessage("Mot de passe modifié avec succès");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmNewPassword("");
@@ -85,93 +80,99 @@ export default function Profile() {
     }
   }
 
-  if (!profile) return <div className="p-8">Chargement...</div>;
+  if (!profile) return <Layout><p>Chargement...</p></Layout>;
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-6">
-      <Link to="/" className="text-sm text-purple-600">{"<- Retour au tableau de bord"}</Link>
-      <h1 className="text-2xl font-bold mt-2 mb-6">Mon profil</h1>
+    <Layout>
+      <p className="font-mono text-xs uppercase tracking-widest text-paprika mb-2">{profile.email}</p>
+      <h1 className="font-display text-3xl font-bold mb-8">Mon profil</h1>
 
-      <p className="text-sm text-gray-500 mb-6">Email: {profile.email}</p>
-
-      <form onSubmit={handleUpdateInfo} className="flex flex-col gap-4 border rounded p-4 mb-6">
-        <h2 className="font-semibold">Informations personnelles</h2>
-        <div className="flex gap-2">
+      <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleUpdateInfo} className="bg-paper border border-line rounded-2xl p-6 flex flex-col gap-4">
+          <div className="flex items-center gap-2 mb-1">
+            <User size={18} className="text-indigo" />
+            <h2 className="font-display font-semibold">Informations</h2>
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Prénom"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="flex-1 border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-paprika"
+            />
+            <input
+              type="text"
+              placeholder="Nom"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="flex-1 border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-paprika"
+            />
+          </div>
           <input
             type="text"
-            placeholder="Prenom"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            className="border rounded px-3 py-2 flex-1"
+            placeholder="Régime alimentaire ^(ex: végétarien^)"
+            value={diet}
+            onChange={(e) => setDiet(e.target.value)}
+            className="border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-paprika"
           />
           <input
             type="text"
-            placeholder="Nom"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            className="border rounded px-3 py-2 flex-1"
+            placeholder="Allergies séparées par des virgules"
+            value={allergiesInput}
+            onChange={(e) => setAllergiesInput(e.target.value)}
+            className="border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-paprika"
           />
-        </div>
-        <input
-          type="text"
-          placeholder="Regime alimentaire (ex: vegetarien)"
-          value={diet}
-          onChange={(e) => setDiet(e.target.value)}
-          className="border rounded px-3 py-2"
-        />
-        <input
-          type="text"
-          placeholder="Allergies separees par des virgules"
-          value={allergiesInput}
-          onChange={(e) => setAllergiesInput(e.target.value)}
-          className="border rounded px-3 py-2"
-        />
-        <label className="flex flex-col text-sm gap-1">
-          Portions par defaut
-          <input
-            type="number"
-            value={defaultServings}
-            onChange={(e) => setDefaultServings(Number(e.target.value))}
-            className="border rounded px-3 py-2 w-32"
-            min={1}
-          />
-        </label>
-        {infoMessage && <p className="text-green-600 text-sm">{infoMessage}</p>}
-        {infoError && <p className="text-red-500 text-sm">{infoError}</p>}
-        <button type="submit" className="bg-purple-600 text-white rounded px-4 py-2">
-          Enregistrer
-        </button>
-      </form>
+          <label className="flex flex-col text-sm gap-1">
+            Portions par défaut
+            <input
+              type="number"
+              value={defaultServings}
+              onChange={(e) => setDefaultServings(Number(e.target.value))}
+              className="border border-line rounded-lg px-3 py-2 text-sm w-28"
+              min={1}
+            />
+          </label>
+          {infoMessage && <p className="text-green-600 text-sm">{infoMessage}</p>}
+          {infoError && <p className="text-red-500 text-sm">{infoError}</p>}
+          <button type="submit" className="bg-indigo text-cream rounded-lg py-2.5 text-sm font-medium hover:bg-indigo-light">
+            Enregistrer
+          </button>
+        </form>
 
-      <form onSubmit={handleUpdatePassword} className="flex flex-col gap-4 border rounded p-4">
-        <h2 className="font-semibold">Changer le mot de passe</h2>
-        <input
-          type="password"
-          placeholder="Mot de passe actuel"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-          className="border rounded px-3 py-2"
-        />
-        <input
-          type="password"
-          placeholder="Nouveau mot de passe (8 caracteres min)"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          className="border rounded px-3 py-2"
-        />
-        <input
-          type="password"
-          placeholder="Confirmer le nouveau mot de passe"
-          value={confirmNewPassword}
-          onChange={(e) => setConfirmNewPassword(e.target.value)}
-          className="border rounded px-3 py-2"
-        />
-        {passwordMessage && <p className="text-green-600 text-sm">{passwordMessage}</p>}
-        {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
-        <button type="submit" className="bg-purple-600 text-white rounded px-4 py-2">
-          Changer le mot de passe
-        </button>
-      </form>
-    </div>
+        <form onSubmit={handleUpdatePassword} className="bg-paper border border-line rounded-2xl p-6 flex flex-col gap-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Lock size={18} className="text-paprika" />
+            <h2 className="font-display font-semibold">Mot de passe</h2>
+          </div>
+          <input
+            type="password"
+            placeholder="Mot de passe actuel"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            className="border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-paprika"
+          />
+          <input
+            type="password"
+            placeholder="Nouveau mot de passe ^(8 caractères min^)"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-paprika"
+          />
+          <input
+            type="password"
+            placeholder="Confirmer le nouveau mot de passe"
+            value={confirmNewPassword}
+            onChange={(e) => setConfirmNewPassword(e.target.value)}
+            className="border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-paprika"
+          />
+          {passwordMessage && <p className="text-green-600 text-sm">{passwordMessage}</p>}
+          {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
+          <button type="submit" className="bg-paprika text-white rounded-lg py-2.5 text-sm font-medium hover:bg-paprika-dark">
+            Changer le mot de passe
+          </button>
+        </form>
+      </div>
+    </Layout>
   );
 }

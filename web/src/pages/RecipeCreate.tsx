@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { api } from "../lib/api";
+import Layout from "../components/Layout";
 import type { Cookbook } from "../lib/types";
+import { ArrowLeft, X } from "lucide-react";
 
 interface IngredientInput {
   name: string;
   quantity: string;
 }
+
+const PLACEHOLDER_IMG = "https://commons.wikimedia.org/wiki/Special:FilePath/Thieboudienne.JPG";
 
 export default function RecipeCreate() {
   const [searchParams] = useSearchParams();
@@ -63,7 +67,7 @@ export default function RecipeCreate() {
 
     const validIngredients = ingredients.filter((i) => i.name.trim() && i.quantity.trim());
     if (validIngredients.length === 0) {
-      setError("Ajoutez au moins un ingredient");
+      setError("Ajoutez au moins un ingrédient");
       return;
     }
 
@@ -98,142 +102,93 @@ export default function RecipeCreate() {
     } catch (err: any) {
       setUploading(false);
       const errData = err.response?.data?.error;
-      setError(typeof errData === "string" ? errData : "Erreur lors de la creation");
+      setError(typeof errData === "string" ? errData : "Erreur lors de la création");
     }
   }
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-6">
-      <Link to="/recipes" className="text-sm text-purple-600">{"<- Retour aux recettes"}</Link>
-      <h1 className="text-2xl font-bold mt-2 mb-6">Nouvelle recette</h1>
+    <Layout>
+      <Link to="/recipes" className="inline-flex items-center gap-1 text-sm text-ink/50 hover:text-paprika mb-4">
+        <ArrowLeft size={14} /> Recettes
+      </Link>
+      <h1 className="font-display text-3xl font-bold mb-8">Nouvelle recette</h1>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="max-w-2xl flex flex-col gap-5">
         <input
           type="text"
           placeholder="Titre de la recette"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="border rounded px-3 py-2"
+          className="border border-line rounded-lg px-3 py-2.5 text-lg font-display font-semibold focus:outline-none focus:border-paprika"
           required
         />
 
         <div>
-          <label className="text-sm font-medium mb-1 block">Photo de la recette</label>
-          {imagePreview && (
-            <img src={imagePreview} alt="Apercu" className="w-full h-48 object-cover rounded mb-2" />
-          )}
-          <input
-            id="recipe-image-input"
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="hidden"
-          />
-          <label
-            htmlFor="recipe-image-input"
-            className="inline-block cursor-pointer bg-gray-100 hover:bg-gray-200 text-sm font-medium rounded px-4 py-2"
-          >
+          <label className="text-sm font-medium mb-2 block">Photo</label>
+          <img src={imagePreview || PLACEHOLDER_IMG} alt="Aperçu" className="w-full h-48 object-cover rounded-xl mb-2" />
+          <input id="recipe-image-input" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+          <label htmlFor="recipe-image-input" className="inline-block cursor-pointer bg-cream border border-line hover:bg-line/50 text-sm font-medium rounded-lg px-4 py-2">
             Choisir une photo
           </label>
         </div>
 
         <label className="flex flex-col text-sm gap-1">
           Emplacement
-          <select
-            value={cookbookId}
-            onChange={(e) => setCookbookId(e.target.value)}
-            className="border rounded px-3 py-2"
-          >
+          <select value={cookbookId} onChange={(e) => setCookbookId(e.target.value)} className="border border-line rounded-lg px-3 py-2 text-sm">
             <option value="">Recette personnelle</option>
-            {cookbooks.map((cb) => (
-              <option key={cb.id} value={cb.id}>{cb.name}</option>
-            ))}
+            {cookbooks.map((cb) => (<option key={cb.id} value={cb.id}>{cb.name}</option>))}
           </select>
         </label>
 
         <textarea
-          placeholder="Etapes de preparation"
+          placeholder="Étapes de préparation"
           value={steps}
           onChange={(e) => setSteps(e.target.value)}
-          className="border rounded px-3 py-2 min-h-32"
+          className="border border-line rounded-lg px-3 py-2 text-sm min-h-32 focus:outline-none focus:border-paprika"
           required
         />
 
         <div className="flex gap-4">
           <label className="flex flex-col text-sm gap-1">
-            Preparation (min)
-            <input
-              type="number"
-              value={prepTime}
-              onChange={(e) => setPrepTime(Number(e.target.value))}
-              className="border rounded px-3 py-2 w-24"
-              min={0}
-            />
+            Préparation (min)
+            <input type="number" value={prepTime} onChange={(e) => setPrepTime(Number(e.target.value))} className="border border-line rounded-lg px-3 py-2 text-sm w-24" min={0} />
           </label>
           <label className="flex flex-col text-sm gap-1">
             Cuisson (min)
-            <input
-              type="number"
-              value={cookTime}
-              onChange={(e) => setCookTime(Number(e.target.value))}
-              className="border rounded px-3 py-2 w-24"
-              min={0}
-            />
+            <input type="number" value={cookTime} onChange={(e) => setCookTime(Number(e.target.value))} className="border border-line rounded-lg px-3 py-2 text-sm w-24" min={0} />
           </label>
           <label className="flex flex-col text-sm gap-1">
             Portions
-            <input
-              type="number"
-              value={servings}
-              onChange={(e) => setServings(Number(e.target.value))}
-              className="border rounded px-3 py-2 w-24"
-              min={1}
-            />
+            <input type="number" value={servings} onChange={(e) => setServings(Number(e.target.value))} className="border border-line rounded-lg px-3 py-2 text-sm w-24" min={1} />
           </label>
         </div>
 
         <div>
-          <h2 className="font-semibold mb-2">Ingredients</h2>
+          <h2 className="font-display font-semibold mb-2">Ingrédients</h2>
           {ingredients.map((ing, i) => (
             <div key={i} className="flex gap-2 mb-2">
-              <input
-                type="text"
-                placeholder="Nom"
-                value={ing.name}
-                onChange={(e) => updateIngredient(i, "name", e.target.value)}
-                className="border rounded px-3 py-2 flex-1"
-              />
-              <input
-                type="text"
-                placeholder="Quantite"
-                value={ing.quantity}
-                onChange={(e) => updateIngredient(i, "quantity", e.target.value)}
-                className="border rounded px-3 py-2 w-32"
-              />
-              <button type="button" onClick={() => removeIngredient(i)} className="text-red-500 px-2">
-                x
-              </button>
+              <input type="text" placeholder="Nom" value={ing.name} onChange={(e) => updateIngredient(i, "name", e.target.value)} className="border border-line rounded-lg px-3 py-2 text-sm flex-1" />
+              <input type="text" placeholder="Quantité" value={ing.quantity} onChange={(e) => updateIngredient(i, "quantity", e.target.value)} className="border border-line rounded-lg px-3 py-2 text-sm w-32" />
+              <button type="button" onClick={() => removeIngredient(i)} className="text-ink/30 hover:text-red-500"><X size={16} /></button>
             </div>
           ))}
-          <button type="button" onClick={addIngredient} className="text-sm text-purple-600">
-            + Ajouter un ingredient
-          </button>
+          <button type="button" onClick={addIngredient} className="text-sm text-paprika font-medium">+ Ajouter un ingrédient</button>
         </div>
 
         <input
           type="text"
-          placeholder="Tags separes par des virgules (ex: italien, rapide)"
+          placeholder="Tags séparés par des virgules ^(ex: sénégalais, rapide^)"
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
-          className="border rounded px-3 py-2"
+          className="border border-line rounded-lg px-3 py-2 text-sm"
         />
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
-        <button type="submit" disabled={uploading} className="bg-purple-600 text-white rounded px-4 py-2 disabled:opacity-50">
-          {uploading ? "Envoi de la photo..." : "Creer la recette"}
+        <button type="submit" disabled={uploading} className="bg-indigo text-cream rounded-lg py-2.5 font-medium hover:bg-indigo-light disabled:opacity-50">
+          {uploading ? "Envoi de la photo..." : "Créer la recette"}
         </button>
       </form>
-    </div>
+    </Layout>
   );
 }

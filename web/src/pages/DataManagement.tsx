@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { api } from "../lib/api";
+import Layout from "../components/Layout";
+import { Download, Upload, AlertTriangle } from "lucide-react";
 
 export default function DataManagement() {
   const [importing, setImporting] = useState(false);
@@ -36,7 +37,7 @@ export default function DataManagement() {
       const data = JSON.parse(text);
       const res = await api.post("/data/import", data);
       setResult(
-        `${res.data.importedRecipes} recette(s) et ${res.data.importedCookbooks} cookbook(s) importes avec succes`
+        `${res.data.importedRecipes} recette(s) et ${res.data.importedCookbooks} cookbook(s) importés avec succès`
       );
     } catch (err: any) {
       const errData = err.response?.data?.error;
@@ -49,38 +50,56 @@ export default function DataManagement() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-6">
-      <Link to="/" className="text-sm text-purple-600">{"<- Retour au tableau de bord"}</Link>
-      <h1 className="text-2xl font-bold mt-2 mb-6">Import / Export</h1>
+    <Layout>
+      <p className="font-mono text-xs uppercase tracking-widest text-paprika mb-2">Vos données</p>
+      <h1 className="font-display text-3xl font-bold mb-8">Import / Export</h1>
 
-      <div className="border rounded p-4 mb-6">
-        <h2 className="font-semibold mb-2">Exporter mes donnees</h2>
-        <p className="text-sm text-gray-500 mb-4">
-          Telecharge toutes tes recettes personnelles et les cookbooks dont tu es proprietaire, au format JSON.
-          Attention: ce fichier contiendra tes donnees en clair, lisibles par quiconque l'ouvre.
-        </p>
-        <button onClick={handleExport} className="bg-purple-600 text-white rounded px-4 py-2">
-          Telecharger mes donnees
-        </button>
-      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-paper border border-line rounded-2xl p-6">
+          <div className="w-10 h-10 rounded-lg bg-indigo/10 flex items-center justify-center mb-4">
+            <Download size={18} className="text-indigo" />
+          </div>
+          <h2 className="font-display font-semibold mb-2">Exporter mes données</h2>
+          <p className="text-sm text-ink/60 mb-4">
+            Télécharge tes recettes personnelles et les cookbooks dont tu es propriétaire, au format JSON.
+            Ce fichier contient tes données en clair.
+          </p>
+          <button onClick={handleExport} className="bg-indigo text-cream rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-indigo-light">
+            Télécharger
+          </button>
+        </div>
 
-      <div className="border rounded p-4">
-        <h2 className="font-semibold mb-2">Importer des donnees</h2>
-        <p className="text-sm text-gray-500 mb-4">
-          Selectionne un fichier JSON au format SUPMEAL. Les recettes et cookbooks importes te seront attribues
-          en tant que createur.
-        </p>
-        <input
-          type="file"
-          accept="application/json"
-          onChange={handleImport}
-          disabled={importing}
-          className="text-sm"
-        />
-        {importing && <p className="text-sm text-gray-500 mt-2">Import en cours...</p>}
-        {result && <p className="text-sm text-green-600 mt-2">{result}</p>}
-        {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
+        <div className="bg-paper border border-line rounded-2xl p-6">
+          <div className="w-10 h-10 rounded-lg bg-gold/20 flex items-center justify-center mb-4">
+            <Upload size={18} className="text-paprika-dark" />
+          </div>
+          <h2 className="font-display font-semibold mb-2">Importer des données</h2>
+          <p className="text-sm text-ink/60 mb-4">
+            Sélectionne un fichier JSON au format SUPMEAL. Les éléments importés te seront attribués comme créateur.
+          </p>
+          <input
+            id="import-file-input"
+            type="file"
+            accept="application/json"
+            onChange={handleImport}
+            disabled={importing}
+            className="hidden"
+          />
+          <label
+            htmlFor="import-file-input"
+            className="inline-block cursor-pointer bg-paprika text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-paprika-dark"
+          >
+            Choisir un fichier
+          </label>
+          {importing && <p className="text-sm text-ink/50 mt-2">Import en cours...</p>}
+          {result && <p className="text-sm text-green-600 mt-2">{result}</p>}
+          {error && (
+            <p className="text-sm text-red-500 mt-2 flex items-center gap-1.5">
+              <AlertTriangle size={14} /> {error}
+            </p>
+          )}
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 }

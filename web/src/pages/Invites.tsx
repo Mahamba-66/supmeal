@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { roleLabel } from "../lib/roles";
+import Layout from "../components/Layout";
 import type { PendingInvite } from "../lib/types";
+import { Mail, Check, X } from "lucide-react";
 
 export default function Invites() {
   const [invites, setInvites] = useState<PendingInvite[]>([]);
@@ -27,35 +29,40 @@ export default function Invites() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-6">
-      <Link to="/" className="text-sm text-purple-600">{"<- Retour au tableau de bord"}</Link>
-      <h1 className="text-2xl font-bold mt-2 mb-6">Invitations en attente</h1>
+    <Layout>
+      <p className="font-mono text-xs uppercase tracking-widest text-paprika mb-2">À traiter</p>
+      <h1 className="font-display text-3xl font-bold mb-8">Invitations</h1>
 
       <ul className="flex flex-col gap-3">
         {invites.map((inv) => (
-          <li key={inv.id} className="border rounded px-4 py-3 flex justify-between items-center">
-            <span>
-              <span className="font-semibold">{inv.cookbook.name}</span>
-             <span className="ml-2 text-sm text-gray-500">(role propose: {roleLabel(inv.role)})</span>
-            </span>
+          <li key={inv.id} className="bg-paper border border-line rounded-2xl p-5 flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-gold/20 flex items-center justify-center">
+                <Mail size={18} className="text-paprika-dark" />
+              </div>
+              <div>
+                <p className="font-display font-semibold">{inv.cookbook.name}</p>
+                <p className="text-xs font-mono text-ink/50">Rôle proposé : {roleLabel(inv.role)}</p>
+              </div>
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={() => handleAccept(inv.cookbook.id)}
-                className="bg-purple-600 text-white rounded px-3 py-1 text-sm"
+                className="flex items-center gap-1.5 bg-indigo text-cream rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-indigo-light"
               >
-                Accepter
+                <Check size={14} /> Accepter
               </button>
               <button
                 onClick={() => handleDecline(inv.cookbook.id)}
-                className="border rounded px-3 py-1 text-sm text-red-600"
+                className="flex items-center gap-1.5 border border-line rounded-lg px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
               >
-                Refuser
+                <X size={14} /> Refuser
               </button>
             </div>
           </li>
         ))}
-        {invites.length === 0 && <p className="text-gray-500">Aucune invitation en attente.</p>}
+        {invites.length === 0 && <p className="text-ink/50 text-center py-12">Aucune invitation en attente.</p>}
       </ul>
-    </div>
+    </Layout>
   );
 }
